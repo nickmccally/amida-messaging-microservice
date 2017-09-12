@@ -8,7 +8,7 @@ const Message = db.Message;
  */
 function load(req, res, next, id) {
     Message.findById(id)
-    .then((message) => {
+    .then((message) => { 
         if (!message) {
             const e = new Error('Message does not exist');
             e.status = httpStatus.NOT_FOUND;
@@ -25,6 +25,7 @@ function load(req, res, next, id) {
  * @returns {Message}
  */
 function get(req, res) {
+    console.log(`inside get ${req.message}`);
     return res.json(req.message);
 }
 
@@ -37,17 +38,35 @@ function get(req, res) {
  * @returns {Message}
  */
 function send(req, res, next) {
-    const message = Message.build({
-        to: req.body.to,
-        from: req.body.from,
-        subject: req.body.subject,
-        message: req.body.message,
-        created: db.sequelize.fn('NOW'),
-    });
-    message.save()
-    .then(savedMessage => res.json(savedMessage))
-    .catch(e => next(e));
+    console.log(`length of recipient array-------${req.body.to.length}`);
+    // var array_lenth = req.body.to.length;
+    // console.log('array_length: '+array_length);
+
+    // defining a variable for array length wasn't working
+    let saveMessage = null;
+    for (let i = 0; i < req.body.to.length; i += 1) {
+        const message = Message.build({
+            to: req.body.to,
+            from: req.body.from,
+            subject: req.body.subject,
+            message: req.body.message,
+            owner: req.body.to[i],
+            created: db.sequelize.fn('NOW'),
+        });
+        //  message.save()
+        //  .then(savedMessage => res.json(savedMessage))
+        //  .catch(e => next(e));
+
+        saveMessage = message.save();
+    }
+    saveMessage.then(savedMessage => res.json(savedMessage))
+                 .catch(e => next(e));
 }
+
+//  message.save()
+//        .then(savedMessage => res.json(savedMessage))
+//        .catch(e => next(e));
+
 
 function list() {}
 

@@ -23,12 +23,14 @@ const testMessageObject = {
 describe('Message Model:', () => {
 
     before(() => {
+        console.log('----------before-----------');
         return Message.sync({
             force: true
         });
     });
     
     after(() => {
+        console.log('-------------after----------');
         return Message.destroy({
             where: {},
             truncate: true
@@ -41,6 +43,7 @@ describe('Message Model:', () => {
             Message
                 .create(testMessageObject)
                 .then(message => {
+                    console.log('inside then...........|||||')
                     expect(message).to.exist;
                     done();
                 })
