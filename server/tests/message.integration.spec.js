@@ -23,19 +23,16 @@ const testMessageObject = {
     subject: 'Test Message',
     message: 'Test post please ignore',
 };
-// console.log('----------by ruchita----------' + testMessageObject.to[0]);
 
 describe('Message API:', function () {
 
     before(() => {
-        console.log('----------before-------------');
         return Message.sync({
             force: true
         });
     });
     
     after(() => {
-        console.log('-----------after----------');
         return Message.destroy({
             where: {},
             truncate: true
@@ -50,7 +47,6 @@ describe('Message API:', function () {
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
                 .then(res => {
-                    console.log('inside then...........');
                     expect(res.text).to.equal('OK');
                     done();
                 })
