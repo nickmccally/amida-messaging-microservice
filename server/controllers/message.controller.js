@@ -8,7 +8,7 @@ const Message = db.Message;
  */
 function load(req, res, next, id) {
     Message.findById(id)
-    .then((message) => { 
+    .then((message) => {
         if (!message) {
             const e = new Error('Message does not exist');
             e.status = httpStatus.NOT_FOUND;
