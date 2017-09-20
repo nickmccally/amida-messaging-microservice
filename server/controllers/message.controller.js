@@ -15,7 +15,6 @@ function load(req, res, next, id) {
             return next(e);
         }
         req.message = message; // eslint-disable-line no-param-reassign
-        console.log(`load----------${message.to}`);
         return next();
     })
     .catch(e => next(e));
@@ -42,6 +41,7 @@ function send(req, res, next) {
     // Defining a variable arrayLength before the loop wasn't working.
     // Getting 'arrayLength undefined' error
     const messageArray = [];
+
     // Saves separate instance where each recipient is the owner
     for (let i = 0; i < req.body.to.length; i += 1) {
         messageArray.push({
@@ -67,11 +67,7 @@ function send(req, res, next) {
       .then(savedMessage => res.json(savedMessage))
       .catch(e => next(e));
 }
-
-/**
- * Returns a list of messages sent to the owner
- * @returns {Array}
- */
+    
 function list() {}
 
 function count() {}

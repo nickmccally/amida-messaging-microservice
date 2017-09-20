@@ -23,52 +23,40 @@ const testMessageObject = {
     subject: 'Test Message',
     message: 'Test post please ignore',
 };
+// console.log('----------by ruchita----------' + testMessageObject.to[0]);
 
 describe('Message API:', function () {
 
-    before(() => {
-        return Message.sync({
-            force: true
-        });
-    });
+    before(() => Message.sync({force: true}));
     
-    after(() => {
-        return Message.destroy({
-            where: {},
-            truncate: true
-        });
-    });
+    after(() => Message.destroy({
+        where: {},
+        truncate: true
+    }));
 
     describe('POST /message/send', function () {
 
-        it('should return OK', done => {
-            request(app)
-                .post(baseURL + '/message/send')
-                .send(testMessageObject)
-                .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.text).to.equal('OK');
-                    done();
-                })
-                .catch(done);
-        });
+        it('should return OK', () => request(app)
+            .post(baseURL + '/message/send')
+            .send(testMessageObject)
+            .expect(httpStatus.OK)
+        );
         
         /**
          * Every recipient, plus the sender, gets their own version
          * of the message with the `owner` field set to their user ID.
          * Creating a message should return the sender's version of the message.
          */
-        it('should return the sender Message object', done => {
-            request(app)
-                .post(baseURL + '/message/send')
-                .send(testMessageObject)
-                .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.body).to.deep.include(testMessageObject);
-                    done();
-                })
-                .catch(done);
-        });
+        it('should return the sender\'s Message object', () => request(app)
+            .post(baseURL + '/message/send')
+            .send(testMessageObject)
+            .expect(httpStatus.OK)
+            .then(res => {
+                expect(res.body).to.deep.include(testMessageObject);
+                expect(res.body.owner).to.equal(testMessageObject.from);
+                return;
+            })
+        );
 
         it('should create new Messages in the DB', done => {
             request(app)
