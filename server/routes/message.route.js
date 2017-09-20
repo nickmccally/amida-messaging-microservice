@@ -8,6 +8,7 @@ const router = express.Router(); // eslint-disable-line new-cap
 router.route('/send')
     .post(validate(paramValidation.sendMessage), messageCtrl.send);
 
+// userId should be replaced by owner
 router.route('/list/:userId')
     .get(messageCtrl.list);
 
