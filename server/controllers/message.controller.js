@@ -67,7 +67,7 @@ function send(req, res, next) {
       .then(savedMessage => res.json(savedMessage))
       .catch(e => next(e));
 }
-    
+
 function list() {}
 
 function count() {}

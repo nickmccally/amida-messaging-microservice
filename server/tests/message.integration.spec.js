@@ -23,7 +23,6 @@ const testMessageObject = {
     subject: 'Test Message',
     message: 'Test post please ignore',
 };
-// console.log('----------by ruchita----------' + testMessageObject.to[0]);
 
 describe('Message API:', function () {
 
