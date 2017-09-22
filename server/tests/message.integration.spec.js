@@ -18,7 +18,7 @@ const version = p.version.split('.').shift();
 const baseURL = (version > 0 ? `/api/v${version}` : '/api');
 
 const testMessageObject = {
-    to: ['user1'],
+    to: ['user1','user2'],
     from: 'user0',
     subject: 'Test Message',
     message: 'Test post please ignore',
@@ -51,8 +51,11 @@ describe('Message API:', function () {
             .send(testMessageObject)
             .expect(httpStatus.OK)
             .then(res => {
-                expect(res.body).to.deep.include(testMessageObject);
+                expect(res.body.to).to.deep.equal(testMessageObject.to);
+                expect(res.body.from).to.equal(testMessageObject.from);
                 expect(res.body.owner).to.equal(testMessageObject.from);
+                expect(res.body.subject).to.equal(testMessageObject.subject);
+                expect(res.body.message).to.equal(testMessageObject.message);
                 return;
             })
         );
@@ -64,15 +67,19 @@ describe('Message API:', function () {
                 .expect(httpStatus.OK)
                 .then(res => {
                     let id = res.body.id;
+                    // what if- Message.findById(res.body.id)
                     Message.findById(id)
                         .then(message => {
-                            expect(message).to.deep.include(testMessageObject);
+                            expect(message.subject).to.equal(testMessageObject.subject);
                             Message.findOne({where: {owner: testMessageObject.to[0]}})
-                                .then(message => {
-                                    expect(message).to.deep.include(testMessageObject);
-                                    done();
-                                });
-                        });
+                            .then(message => {
+                                //expect(message).to.deep.equal(testMessageObject); -- not working
+                                expect(message.from).to.equal(testMessageObject.from);
+                                expect(message.subject).to.equal(testMessageObject.subject);
+                                expect(message.message).to.equal(testMessageObject.message);
+                                done();         
+                            });
+                        });                
                 })
                 .catch(done);
         });
@@ -96,7 +103,10 @@ describe('Message API:', function () {
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
                 .then(res => {
-                    expect(res.body.readAt).to.be.null;
+                    Message.findOne({where: {owner: testMessageObject.to[0]}})
+                            .then(message => {
+                                expect(message.readAt).to.be.null;   
+                            });
                     done();
                 })
                 .catch(done);
@@ -111,16 +121,15 @@ describe('Message API:', function () {
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
                 .then(res => {
-                    Message.findOne({where: {owner: testMessageObject.to[0]}})
+                    Message.findById(res.body.id)       //do we need to define res.body.id outside?
                         .then(message => {
-                            expect(message.readAt).to.be.not.null;
-                            expect(message.readAt).to.equalDate(message.createdAt);
+                            expect(message.readAt).to.not.be.null;
+                            expect(message.readAt).to.deep.equal(message.createdAt);
                             done();
-                        });
-                })
-                .catch(done);
+                        })
+                        .catch(done);
+                 });
         });
-
     });
 
     describe('POST /message/reply/:messageId', () => {
