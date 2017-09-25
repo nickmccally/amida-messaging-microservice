@@ -37,16 +37,39 @@ function get(req, res) {
  * @returns {Message}
  */
 function send(req, res, next) {
-    const message = Message.build({
+    // Each iteration saves the recipient's name from the to[] array as the owner to the db.
+    const createdTime = new Date();
+    const messageArray = [];
+
+    // Saves separate instance where each recipient is the owner
+    for (let i = 0; i < req.body.to.length; i += 1) {
+        messageArray.push({
+            to: req.body.to,
+            from: req.body.from,
+            subject: req.body.subject,
+            message: req.body.message,
+            owner: req.body.to[i],
+            createdAt: createdTime,
+        });
+    }
+
+    const bulkCreate = Message.bulkCreate(messageArray);
+
+    // Saves an instance where the sender is owner and readAt=current time
+    const messageCreate = Message.create({
         to: req.body.to,
         from: req.body.from,
         subject: req.body.subject,
         message: req.body.message,
-        created: db.sequelize.fn('NOW'),
+        owner: req.body.from,
+        createdAt: createdTime,
+        readAt: createdTime,
     });
-    message.save()
-    .then(savedMessage => res.json(savedMessage))
-    .catch(e => next(e));
+
+    // once the bulkCreate and create promises resolve, send the sender's saved message or an error
+    Promise
+        .join(bulkCreate, messageCreate, (bulkResult, messageResult) => res.json(messageResult))
+        .catch(e => next(e));
 }
 
 function list() {}
