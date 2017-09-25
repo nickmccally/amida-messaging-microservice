@@ -8,10 +8,10 @@ const router = express.Router(); // eslint-disable-line new-cap
 router.route('/send')
     .post(validate(paramValidation.sendMessage), messageCtrl.send);
 
-// userId should be replaced by owner
+// TODO: needs to be clear that userId is the owner
 router.route('/list/:userId')
     .get(messageCtrl.list);
-
+// TODO: needs to be clear that userId is the owner
 router.route('/count/:userId')
     .get(messageCtrl.count);
 
