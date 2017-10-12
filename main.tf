@@ -9,7 +9,7 @@ data "aws_ami" "api" {
 
   filter {
     name   = "name"
-    values = ["api-boilerplate-${var.build_env}*"]
+    values = ["api-messaging-service-boilerplate-${var.build_env}*"]
   }
 
   owners = ["844297601570"]
@@ -33,12 +33,19 @@ resource "aws_launch_configuration" "launch_config" {
 }
 
 resource "aws_security_group" "api_sg" {
-  name        = "api-boilerplate-security-group"
+  name        = "api-messaging-service-boilerplate-security-group"
   description = "SG for API boilerplate deployment"
 
   ingress {
     from_port   = 0
     to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 0
+    to_port     = "${var.port}"
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -81,7 +88,7 @@ resource "aws_security_group" "api_sg" {
 
 resource "aws_autoscaling_group" "main_asg" {
   # interpolate the LC into the ASG name so it always forces an update
-  name = "api-${var.build_env}-asg-${data.aws_ami.api.id}"
+  name = "api-messaging-service-${var.build_env}-asg-${data.aws_ami.api.id}"
 
   # We want this to explicitly depend on the launch config above
   depends_on = ["aws_launch_configuration.launch_config"]
@@ -110,7 +117,7 @@ resource "aws_autoscaling_group" "main_asg" {
 
   tag {
     key                 = "Name"
-    value               = "api-${var.build_env}"
+    value               = "api-messaging-service-${var.build_env}"
     propagate_at_launch = true
   }
 
@@ -120,12 +127,12 @@ resource "aws_autoscaling_group" "main_asg" {
 }
 
 resource "aws_elb" "api_lb" {
-  name               = "api-boilerplate-lb"
+  name               = "api-messaging-service-lb"
   availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
   security_groups    = ["${aws_security_group.api_sg.id}"]
 
   listener {
-    instance_port     = 80
+    instance_port     = "${var.port}"
     instance_protocol = "http"
     lb_port           = 80
     lb_protocol       = "http"
@@ -174,7 +181,25 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   }
 
   alarm_description = "This metric monitors high ec2 cpu utilization"
-  alarm_actions     = ["${aws_autoscaling_policy.scale_up.arn}"]
+  alarm_actions     = ["${aws_autoscaling_policy.scale_up.arn}", "arn:aws:sns:us-west-2:844297601570:ops_team_alerts"]
+}
+
+resource "aws_cloudwatch_metric_alarm" "cpu_very_high" {
+  alarm_name          = "${aws_autoscaling_group.main_asg.name}-cpu-very-high"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "120"
+  statistic           = "Average"
+  threshold           = "90"
+
+  dimensions {
+    AutoScalingGroupName = "${aws_autoscaling_group.main_asg.name}"
+  }
+
+  alarm_description = "This metric monitors very high ec2 cpu utilization"
+  alarm_actions     = ["${aws_autoscaling_policy.scale_up.arn}", "arn:aws:sns:us-west-2:844297601570:ops_team_alerts"]
 }
 
 resource "aws_autoscaling_policy" "scale_down" {
@@ -200,7 +225,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_low" {
   }
 
   alarm_description = "This metric monitors low ec2 cpu utilization"
-  alarm_actions     = ["${aws_autoscaling_policy.scale_down.arn}"]
+  alarm_actions     = ["${aws_autoscaling_policy.scale_down.arn}", "arn:aws:sns:us-west-2:844297601570:ops_team_alerts"]
 }
 
 variable "aws_region" {
