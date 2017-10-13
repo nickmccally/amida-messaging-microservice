@@ -25,7 +25,12 @@ function load(req, res, next, id) {
  * @returns {Message}
  */
 function get(req, res) {
-    res.json(req.message);
+    if (req.message) {
+        req.message.update({
+            readAt: new Date(),
+        });
+    }
+    return res.send(req.message);
 }
 
 /**
@@ -68,9 +73,32 @@ function send(req, res, next) {
       .catch(e => next(e));
 }
 
-function list() {}
+function list(req, res) {
+    const queryObject = {};
+    const whereObject = {};
 
-function count() {}
+    if (req.query.from) {
+        whereObject.from = req.query.from;
+    }
+
+    if (req.query.limit) {
+        queryObject.limit = req.query.limit;
+    }
+
+    if (req.query.summary) {
+        queryObject.attributes = ['subject', 'from', 'createdAt'];
+    }
+
+    Message.findAll({
+        where: { from: whereObject.from },
+        attributes: queryObject.attributes,
+        limit: queryObject.limit,
+    }).then(results => res.send(results));
+}
+
+function count() {
+    // use findAndCountAll
+}
 
 function remove() {}
 
