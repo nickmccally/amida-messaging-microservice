@@ -5,6 +5,12 @@
 - name: Move API code to correct location
   command: mv /tmp/app {{ src_dir }}
 
+- name: Install Patch
+  sudo: yes
+  yum:
+    name: patch
+    state: latest
+
 - name: Install yarn
   sudo: yes
   command: npm install -g yarn
