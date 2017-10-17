@@ -231,35 +231,3 @@ resource "aws_cloudwatch_metric_alarm" "cpu_low" {
 variable "aws_region" {
   default = "us-west-2"
 }
-
-variable "instance_type" {}
-
-variable "aws_access_key" {}
-
-variable "aws_secret_key" {}
-
-variable "key_name" {
-  description = "The SSH public key name (in EC2 key-pairs) to be injected into instances"
-}
-
-variable "asg_maximum_number_of_instances" {
-  description = "The maximum number of instances the ASG should maintain"
-}
-
-variable "asg_minimum_number_of_instances" {
-  description = "The minimum number of instances the ASG should maintain"
-}
-
-variable "health_check_grace_period" {
-  description = "Number of seconds for a health check to time out"
-}
-
-variable "health_check_type" {
-  description = "The health check used by the ASG to determine health"
-}
-
-variable "availability_zones" {
-  description = "A comma seperated list string of AZs the ASG will be associated with"
-}
-
-variable "build_env" {}
