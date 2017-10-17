@@ -1,5 +1,6 @@
 import httpStatus from 'http-status';
 import db from '../../config/sequelize';
+import op from '../../config/sequelize';
 
 const Message = db.Message;
 
@@ -74,11 +75,12 @@ function send(req, res, next) {
 }
 
 function list(req, res) {
-    const queryObject = {};
-    const whereObject = {};
+    let queryObject = {};
 
     if (req.query.from) {
+        let whereObject = {};
         whereObject.from = req.query.from;
+        queryObject.where = whereObject;
     }
 
     if (req.query.limit) {
@@ -89,11 +91,8 @@ function list(req, res) {
         queryObject.attributes = ['subject', 'from', 'createdAt'];
     }
 
-    Message.findAll({
-        where: { from: whereObject.from },
-        attributes: queryObject.attributes,
-        limit: queryObject.limit,
-    }).then(results => res.send(results));
+    Message.findAll(queryObject)
+           .then(results => res.send(results));
 }
 
 function count() {
