@@ -11,6 +11,10 @@
   sudo: yes
   command: chdir=/CloudWatch unzip CloudWatchMonitoringScripts-1.2.1.zip
 
+- name: Remove Zip File
+  sudo: yes
+  command: chdir=/CloudWatch rm -rf CloudWatchMonitoringScripts-1.2.1.zip
+
 - name: Replace Crontab File
   sudo: yes
   template:
