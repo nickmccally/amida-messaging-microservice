@@ -10,7 +10,7 @@ router.route('/send')
 
 // userId should not exist;
 // url should contain: ?limit=number, ?from=username, ?summary=true/false
-router.route('/list/:userId')
+router.route('/list/:limit')
     .get(messageCtrl.list);
 
 // userId should not exist; adding 'owner' for now; remove after integrating with auth service;

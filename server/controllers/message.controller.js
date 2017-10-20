@@ -1,6 +1,5 @@
 import httpStatus from 'http-status';
 import db from '../../config/sequelize';
-import op from '../../config/sequelize';
 
 const Message = db.Message;
 
@@ -15,6 +14,7 @@ function load(req, res, next, id) {
             e.status = httpStatus.NOT_FOUND;
             return next(e);
         }
+        console.log("load-req.message: "+req.message);
         req.message = message; // eslint-disable-line no-param-reassign
         return next();
     })
@@ -57,6 +57,7 @@ function send(req, res, next) {
             message: req.body.message,
             owner: req.body.to[i],
             created: new Date(),
+            isDeleted: false,
         });
     }
     Message.bulkCreate(messageArray);
@@ -69,6 +70,7 @@ function send(req, res, next) {
         owner: req.body.from,
         created: new Date(),
         readAt: new Date(),
+        isDeleted: false,
     }).save()
       .then(savedMessage => res.json(savedMessage))
       .catch(e => next(e));
@@ -76,9 +78,10 @@ function send(req, res, next) {
 
 function list(req, res) {
     let queryObject = {};
+    let whereObject = {};
+    whereObject.isDeleted = true;
 
     if (req.query.from) {
-        let whereObject = {};
         whereObject.from = req.query.from;
         queryObject.where = whereObject;
     }
@@ -92,13 +95,24 @@ function list(req, res) {
     }
 
     Message.findAll(queryObject)
-           .then(returnsults => res.send(results));
+           .then(results => res.send(results));
 }
 
-function count() {
-    // use findAndCountAll
-}
+function count() {}
 
-function remove() {}
+/**
+ * Soft delete
+ * sets isDelete of message with the userID to true
+ * @returns {Message}
+ */
+function remove(req,res) {
+    if (req.message) {
+    console.log("req.message: "+JSON.stringify(req.message));
+        req.message.update({
+            isDeleted: true,
+        });
+    }
+    return res.send(req.message);
+}
 
 export default { send, get, list, count, remove, load };
