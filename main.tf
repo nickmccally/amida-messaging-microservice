@@ -289,6 +289,42 @@ resource "aws_cloudwatch_metric_alarm" "disk_very_high" {
   alarm_actions     = ["arn:aws:sns:us-west-2:844297601570:ops_team_alerts"]
 }
 
+resource "aws_cloudwatch_metric_alarm" "surge-que-length-high" {
+  alarm_name  = "${aws_elb.api_lb.name}-surge-que-length-high"
+  namespace   = "AWS/ELB"
+  metric_name = "SurgeQueueLength"
+
+  dimensions = {
+    LoadBalancerName = "${aws_elb.api_lb.name}"
+  }
+
+  statistic           = "Sum"
+  period              = 60
+  comparison_operator = "GreaterThanThreshold"
+  threshold           = "512"
+  evaluation_periods  = 2
+  alarm_description = "This metric monitors elb excess surge que length"
+  alarm_actions     = ["${aws_autoscaling_policy.scale_up.arn}", "arn:aws:sns:us-west-2:844297601570:ops_team_alerts"]
+}
+
+resource "aws_cloudwatch_metric_alarm" "ELB-5XX" {
+  alarm_name  = "${aws_elb.api_lb.name}-ELB-5XX"
+  namespace   = "AWS/ELB"
+  metric_name = "HTTPCode_ELB_5XX"
+
+  dimensions = {
+    LoadBalancerName = "${aws_elb.api_lb.name}"
+  }
+
+  statistic           = "Sum"
+  period              = 60
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = "1"
+  evaluation_periods  = 2
+  alarm_description = "This metric monitors the presence of healthy instances and absence of request spill overs"
+  alarm_actions     = ["${aws_autoscaling_policy.scale_up.arn}", "arn:aws:sns:us-west-2:844297601570:ops_team_alerts"]
+}
+
 variable "aws_region" {
   default = "us-west-2"
 }
