@@ -92,7 +92,7 @@ function list(req, res) {
     }
 
     Message.findAll(queryObject)
-           .then(returnsults => res.send(results));
+           .then(results => res.send(results));
 }
 
 function count() {
