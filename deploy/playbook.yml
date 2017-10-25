@@ -4,9 +4,11 @@
     - role: repo-epel
       sudo: true
     - role: nodejs
+      sudo: true
     - role: nginx
       sudo: true
     - role: api
+      sudo: true
     - role: logging
       sudo: true
     - role: cloudwatch
