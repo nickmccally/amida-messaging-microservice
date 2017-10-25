@@ -20,6 +20,7 @@ resource "aws_launch_configuration" "launch_config" {
   instance_type   = "${var.instance_type}"
   key_name        = "${var.key_name}"
   security_groups = ["${aws_security_group.api_sg.id}"]
+  iam_instance_profile = "app-ec2-role"
 
   root_block_device {
     delete_on_termination = true
@@ -226,6 +227,66 @@ resource "aws_cloudwatch_metric_alarm" "cpu_low" {
 
   alarm_description = "This metric monitors low ec2 cpu utilization"
   alarm_actions     = ["${aws_autoscaling_policy.scale_down.arn}", "arn:aws:sns:us-west-2:844297601570:ops_team_alerts"]
+}
+
+resource "aws_cloudwatch_metric_alarm" "disk_low" {
+  alarm_name          = "${aws_autoscaling_group.main_asg.name}-disk-low"
+  comparison_operator = "LessThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "DiskSpaceUtilization"
+  namespace           = "System/Linux"
+  period              = "120"
+  statistic           = "Average"
+  threshold           = "10"
+
+  dimensions {
+    AutoScalingGroupName = "${aws_autoscaling_group.main_asg.name}"
+    Filesystem = "/dev/xvda1"
+    MountPath = "/"
+  }
+
+  alarm_description = "This metric monitors low disk space utilization"
+  alarm_actions     = ["arn:aws:sns:us-west-2:844297601570:ops_team_alerts"]
+}
+
+resource "aws_cloudwatch_metric_alarm" "disk_high" {
+  alarm_name          = "${aws_autoscaling_group.main_asg.name}-disk-high"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "DiskSpaceUtilization"
+  namespace           = "System/Linux"
+  period              = "120"
+  statistic           = "Average"
+  threshold           = "80"
+
+  dimensions {
+    AutoScalingGroupName = "${aws_autoscaling_group.main_asg.name}"
+    Filesystem = "/dev/xvda1"
+    MountPath = "/"
+  }
+
+  alarm_description = "This metric monitors high disk space utilization"
+  alarm_actions     = ["arn:aws:sns:us-west-2:844297601570:ops_team_alerts"]
+}
+
+resource "aws_cloudwatch_metric_alarm" "disk_very_high" {
+  alarm_name          = "${aws_autoscaling_group.main_asg.name}-disk-very-high"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "DiskSpaceUtilization"
+  namespace           = "System/Linux"
+  period              = "120"
+  statistic           = "Average"
+  threshold           = "90"
+
+  dimensions {
+    AutoScalingGroupName = "${aws_autoscaling_group.main_asg.name}"
+    Filesystem = "/dev/xvda1"
+    MountPath = "/"
+  }
+
+  alarm_description = "This metric monitors high disk space utilization"
+  alarm_actions     = ["arn:aws:sns:us-west-2:844297601570:ops_team_alerts"]
 }
 
 variable "aws_region" {
