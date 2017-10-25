@@ -9,7 +9,7 @@ data "aws_ami" "api" {
 
   filter {
     name   = "name"
-    values = ["api-messaging-service-boilerplate-${var.build_env}*"]
+    values = ["api-${var.service_name}-service-boilerplate-${var.build_env}*"]
   }
 
   owners = ["844297601570"]
@@ -34,7 +34,7 @@ resource "aws_launch_configuration" "launch_config" {
 }
 
 resource "aws_security_group" "api_sg" {
-  name        = "api-messaging-service-boilerplate-security-group"
+  name        = "api-${var.service_name}-service-boilerplate-security-group"
   description = "SG for API boilerplate deployment"
 
   ingress {
@@ -89,7 +89,7 @@ resource "aws_security_group" "api_sg" {
 
 resource "aws_autoscaling_group" "main_asg" {
   # interpolate the LC into the ASG name so it always forces an update
-  name = "api-messaging-service-${var.build_env}-asg-${data.aws_ami.api.id}"
+  name = "api-${var.service_name}-service-${var.build_env}-asg-${data.aws_ami.api.id}"
 
   # We want this to explicitly depend on the launch config above
   depends_on = ["aws_launch_configuration.launch_config"]
@@ -118,7 +118,7 @@ resource "aws_autoscaling_group" "main_asg" {
 
   tag {
     key                 = "Name"
-    value               = "api-messaging-service-${var.build_env}"
+    value               = "api-${var.service_name}-service-${var.build_env}"
     propagate_at_launch = true
   }
 
@@ -128,7 +128,7 @@ resource "aws_autoscaling_group" "main_asg" {
 }
 
 resource "aws_elb" "api_lb" {
-  name               = "api-messaging-service-lb"
+  name               = "api-${var.service_name}-service-lb"
   availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
   security_groups    = ["${aws_security_group.api_sg.id}"]
 
