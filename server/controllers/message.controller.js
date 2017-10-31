@@ -1,6 +1,5 @@
 import httpStatus from 'http-status';
 import db from '../../config/sequelize';
-import op from '../../config/sequelize';
 
 const Message = db.Message;
 
@@ -74,11 +73,16 @@ function send(req, res, next) {
       .catch(e => next(e));
 }
 
+// returns a list of messages
+// Currently, there is no distinction between a message created by a user, &
+// a message sent by that user, since he is the 'owner' in both cases.
+// This needs integration with auth microservice
+// Query paramters: 'from', 'summary', 'limit'
 function list(req, res) {
-    let queryObject = {};
+    const queryObject = {};
 
     if (req.query.from) {
-        let whereObject = {};
+        const whereObject = {};
         whereObject.from = req.query.from;
         queryObject.where = whereObject;
     }
@@ -92,7 +96,7 @@ function list(req, res) {
     }
 
     Message.findAll(queryObject)
-           .then(returnsults => res.send(results));
+           .then(results => res.send(results));
 }
 
 function count() {
