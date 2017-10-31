@@ -57,7 +57,19 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.BOOLEAN,
             allowNull: false,
         }
-    });
+    },
+    {
+        classMethods: {
+          findAllVisible: function (message) {
+            return Message.findAll({
+              where: {
+                isDeleted: false
+              }
+            })
+          }
+        }
+    }
+    );
 
     // Class methods
 

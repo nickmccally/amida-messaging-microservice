@@ -77,11 +77,10 @@ function send(req, res, next) {
 }
 
 function list(req, res) {
-    let queryObject = {};
-    let whereObject = {};
-    whereObject.isDeleted = true;
+    const queryObject = {};
 
     if (req.query.from) {
+        const whereObject = {};
         whereObject.from = req.query.from;
         queryObject.where = whereObject;
     }
@@ -94,8 +93,9 @@ function list(req, res) {
         queryObject.attributes = ['subject', 'from', 'createdAt'];
     }
 
-    Message.findAll(queryObject)
-           .then(results => res.send(results));
+    Message
+        .findAllVisible(queryObject)
+        .then(results => res.send(results));
 }
 
 function count() {}
