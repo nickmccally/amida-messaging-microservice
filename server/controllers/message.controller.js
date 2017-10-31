@@ -99,8 +99,9 @@ function list(req, res) {
         queryObject.attributes = ['subject', 'from', 'createdAt'];
     }
 
-    Message.findAll(queryObject)
-           .then(results => res.send(results));
+    Message
+        .findAll(queryObject)
+        .then(results => res.send(results));
 }
 
 function count() {
