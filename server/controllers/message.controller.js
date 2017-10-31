@@ -43,8 +43,7 @@ function get(req, res) {
  */
 function send(req, res, next) {
     // Each iteration saves the recipient's name from the to[] array as the owner to the db.
-    // Defining a variable arrayLength before the loop wasn't working.
-    // Getting 'arrayLength undefined' error
+    const createdTime = new Date();
     const messageArray = [];
 
     // Saves separate instance where each recipient is the owner
@@ -55,22 +54,27 @@ function send(req, res, next) {
             subject: req.body.subject,
             message: req.body.message,
             owner: req.body.to[i],
-            created: new Date(),
+            createdAt: createdTime,
         });
     }
-    Message.bulkCreate(messageArray);
+
+    const bulkCreate = Message.bulkCreate(messageArray);
+
     // Saves an instance where the sender is owner and readAt=current time
-    Message.build({
+    const messageCreate = Message.create({
         to: req.body.to,
         from: req.body.from,
         subject: req.body.subject,
         message: req.body.message,
         owner: req.body.from,
-        created: new Date(),
-        readAt: new Date(),
-    }).save()
-      .then(savedMessage => res.json(savedMessage))
-      .catch(e => next(e));
+        createdAt: createdTime,
+        readAt: createdTime,
+    });
+
+    // once the bulkCreate and create promises resolve, send the sender's saved message or an error
+    Promise
+        .join(bulkCreate, messageCreate, (bulkResult, messageResult) => res.json(messageResult))
+        .catch(e => next(e));
 }
 
 // returns a list of messages

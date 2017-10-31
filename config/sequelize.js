@@ -2,6 +2,8 @@ import Sequelize from 'sequelize';
 import _ from 'lodash';
 import config from './config';
 
+const dbLogging = config.env !== 'test';
+
 const db = {};
 
 // // connect to postgres db
@@ -12,6 +14,7 @@ const sequelize = new Sequelize(config.postgres.db,
         dialect: 'postgres',
         port: config.postgres.port,
         host: config.postgres.host,
+        logging: dbLogging,
     });
 
 db.Message = sequelize.import('../server/models/message.model');
