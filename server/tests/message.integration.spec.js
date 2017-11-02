@@ -12,6 +12,7 @@ import {
 import _ from 'lodash';
 
 chai.use(require('chai-datetime'));
+chai.use(require('chai-date-string'));
 
 const version = p.version.split('.').shift();
 const baseURL = (version > 0 ? `/api/v${version}` : '/api');
@@ -22,6 +23,19 @@ const testMessageObject = {
     subject: 'Test Message',
     message: 'Test post please ignore',
 };
+
+const testMessageArray = [];
+const fromArray = ['user0','user1','user2','user3'];
+// 4 senders send message to 4 recipients each
+for (let i = 0; i < fromArray.length; i += 1) {
+    testMessageArray.push({
+        to: ['user1','user2','user3','user4'],
+        from: fromArray[i],
+        subject: 'Test Message',
+        message: 'Test post please ignore',
+        owner: 'force owner',
+    })
+}
 
 describe('Message API:', function () {
 
@@ -163,69 +177,94 @@ describe('Message API:', function () {
     // });
 
     //parameters: from, summary, limit
-    describe('GET /message/list', function () {
+    describe('GET /message/list?from=username&limit=number&summary=true', function () {
 
-        let userId;
+        let userName;
+        let limit = 2;
+        let summary = true;
 
-        before(done => {
-            const testMessageArray = [];
-            const fromArray = ['user0','user1','user2','user3'];
-
-            // 4 senders send message to 4 recipients each
-            for (let i = 0; i < fromArray.length; i += 1) {
-                    testMessageArray.push({
-                    to: ['user1','user2','user3','user4'],
-                    from: fromArray[i],
-                    subject: 'Test Message',
-                    message: 'Test post please ignore',
-                    owner: 'force owner',
-                    })
-             }//.then(() => {
-        //     Message.bulkCreate(testMessageArray);
-        //     console.log("testMessageArray" +testMessageArray);
-        //     done();
+        before(done => {Message.destroy({
+                            where: {},
+                            truncate: true
+            }).then(message => {
+            Message.bulkCreate(testMessageArray).then(messages => {
+                userName = messages[0].from;
+                done();
+            });
+            });
         });
 
-        // it('should return OK', () => request(app)
-        //     .get(baseURL + '/message/list')
-        //     //.expect(testMessageObject)
-        //     .expect(httpStatus.OK)
-        // );
-        // it('should return OK', done => {
-        //     request(app)
-        //         .get(baseURL + '/message/list')
-        //         .expect(httpStatus.OK)
-        //         .then(res => {
-        //             expect(res.text).to.equal('OK');
-        //             done();
-        //         })
-        //         .catch(done);
-        // });
+        after(done => {
+            Message.destroy({
+                where: {},
+                truncate: true
+            })
+            done();
+        });
 
-        // it('should return all Message addressed to a user', done => {
-        //     request(app)
-        //         .get(baseURL + '/message/list') 
-        //         .expect(httpStatus.OK)
-        //         .then(res => {
-        //             //expect(res)
-        //             console.log(res);
-        //             //     .to.be.an('array')
-        //             //     .that.deep.includes(testMessageObject);
-        //             // expect(res.from).to.equal(testMessageObject.from);
+        it('should return OK', done => { //remove done, removed res.text
+            request(app)
+                .get(baseURL + '/message/list')
+                .expect(httpStatus.OK)
+            done();
+        });
 
-        //             done();
-        //         })
-        //         .catch(done);
-        // });
+        // this cannot be tested correctly without auth microservice.
+        // Just returning all messages for now, without considering the owner
+        it('should return all Message addressed to a user', done => {
+            request(app)
+                .get(baseURL + '/message/list') 
+                .expect(httpStatus.OK)
+                .then(res => {
+                    expect(res.body).to.be.an('array');  //changed res to res.body
+                    expect(res.body.from).to.equal(testMessageArray.from);
+                    expect(res.body.to).to.equal(testMessageArray.to);
+                    done();
+                })
+                .catch(done);
+        });
 
         // TODO: Ruchita to write this test
-        it('has an option to limit Message returned');
+        it('has an option to limit Message returned', done => {
+            request(app)
+                .get(baseURL + '/message/list?limit=' + limit) 
+                .expect(httpStatus.OK)
+                .then(res => {
+                    expect(res.body).to.be.an('array');  //changed res to res.body
+                    expect(res.body.length).to.equal(limit);
+                    done();
+                })
+                .catch(done);
+        });
 
         // TODO: Ruchita to write this test
-        it('has an option to limit by sender');
+        it('has an option to limit by sender', done => {
+            request(app)
+                .get(baseURL + '/message/list?from=' + userName) 
+                .expect(httpStatus.OK)
+                .then(res => {
+                    expect(res.body).to.be.an('array');  //changed res to res.body
+                    expect(res.body[0].from).to.equal(testMessageArray[0].from);
+                    expect(res.body[0].to).to.deep.equal(testMessageArray[0].to);
+                    done();
+                })
+                .catch(done);
+        });
 
         // TODO: Ruchita to write this test
-        it('has an option to return summaries');
+        it('has an option to return summaries', done => {
+            request(app)
+                .get(baseURL + '/message/list?summary=' + summary) 
+                .expect(httpStatus.OK)
+                .then(res => {
+                    expect(res.body).to.be.an('array');  //changed res to res.body
+                    expect(res.body[0].from).to.equal(testMessageArray[0].from);
+                    expect(res.body[0].to).to.be.undefined;
+                    expect(res.body[0].message).to.be.undefined;
+                    done();
+                })
+                .catch(done);
+        });
 
     });
     
@@ -286,6 +325,7 @@ describe('Message API:', function () {
         let messageId;
         
         before(done => {
+            testMessageObject.owner = "test owner"; //forcing owner to be a specific value
             Message.create(testMessageObject)
                 .then(message => {
                     messageId = message.id;
@@ -293,23 +333,30 @@ describe('Message API:', function () {
                 });
         });
 
-        it('should return OK', done => {
-            request(app)
-                .get(baseURL + '/message/get' + messageId)
-                .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.text).to.equal('OK');
-                    done();
+        after(done => {
+                Message.destroy({
+                    where: {},
+                    truncate: true
                 })
-                .catch(done);
+            done();
+        });
+
+        it('should return OK', () => { //removed done, removed res.text
+            request(app)
+                .get(baseURL + '/message/get/' + messageId)
+                .expect(httpStatus.OK)
         });
 
         it('should return the specified Message', done => {
             request(app)
-                .get(baseURL + '/message/get' + messageId)
+                .get(baseURL + '/message/get/' + messageId)
                 .expect(httpStatus.OK)
                 .then(res => {
-                    expect(res.body).to.deep.include(testMessageObject);
+                    expect(res.body.to).to.deep.equal(testMessageObject.to);
+                    expect(res.body.from).to.equal(testMessageObject.from);
+                    expect(res.body.subject).to.equal(testMessageObject.subject);
+                    expect(res.body.message).to.equal(testMessageObject.message);
+                    //not checking for owner here because that value was forced to a string
                     done();
                 })
                 .catch(done);
@@ -317,11 +364,11 @@ describe('Message API:', function () {
 
         it('should mark the Message retrieved as read', done => {
             request(app)
-                .get(baseURL + '/message/get' + messageId)
+                .get(baseURL + '/message/get/' + messageId)
                 .expect(httpStatus.OK)
                 .then(res => {
                     expect(res.body.readAt).to.not.be.null;
-                    expect(res.body.readAt).to.be.a('Date');
+                    expect(res.body.readAt).to.be.a.dateString();
                     done();
                 })
                 .catch(done);

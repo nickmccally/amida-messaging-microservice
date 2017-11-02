@@ -968,6 +968,10 @@ center-align@^0.1.1:
     align-text "^0.1.3"
     lazy-cache "^1.0.3"
 
+chai-date-string@false0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/chai-date-string/-/chai-date-string-0.1.0.tgz#0774574e7eeee788a655305f55c075b42c2837c2"
+
 chai-datetime@1.5.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/chai-datetime/-/chai-datetime-1.5.0.tgz#3742f18b024c75b76a2b7eee291662324467596c"

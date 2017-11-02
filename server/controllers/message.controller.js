@@ -76,6 +76,11 @@ function send(req, res, next) {
       .catch(e => next(e));
 }
 
+// returns a list of messages
+// Currently, there is no distinction between a message created by a user, &
+// a message sent by that user, since he is the 'owner' in both cases.
+// This needs integration with auth microservice
+// Query paramters: 'from', 'summary', 'limit'
 function list(req, res) {
     const queryObject = {};
 
