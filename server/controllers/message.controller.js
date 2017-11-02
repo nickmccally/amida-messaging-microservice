@@ -99,7 +99,7 @@ function list(req, res) {
     }
 
     Message
-        .findAllVisible(queryObject)
+        .findAll(queryObject)
         .then(results => res.send(results));
 }
 

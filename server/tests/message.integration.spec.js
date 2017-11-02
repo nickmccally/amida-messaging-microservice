@@ -40,7 +40,7 @@ for (let i = 0; i < fromArray.length; i += 1) {
 describe('Message API:', function () {
 
     before(() => Message.sync({force: true}));
-    
+
     after(() => Message.destroy({
         where: {},
         truncate: true
@@ -53,7 +53,7 @@ describe('Message API:', function () {
             .send(testMessageObject)
             .expect(httpStatus.OK)
         );
-        
+
         /**
          * Every recipient, plus the sender, gets their own version
          * of the message with the `owner` field set to their user ID.
@@ -90,9 +90,9 @@ describe('Message API:', function () {
                                 expect(message.from).to.equal(testMessageObject.from);
                                 expect(message.subject).to.equal(testMessageObject.subject);
                                 expect(message.message).to.equal(testMessageObject.message);
-                                done();         
+                                done();
                             });
-                        });                
+                        });
                 })
                 .catch(done);
         });
@@ -118,7 +118,7 @@ describe('Message API:', function () {
                 .then(res => {
                     Message.findOne({where: {owner: testMessageObject.to[0]}})
                             .then(message => {
-                                expect(message.readAt).to.be.null;   
+                                expect(message.readAt).to.be.null;
                             });
                     done();
                 })
@@ -148,7 +148,7 @@ describe('Message API:', function () {
     // describe('POST /message/reply/:messageId', () => {
 
     //     let messageId;
-        
+
     //     before(done => {
     //         Message.create(testMessageObject)
     //             .then(message => {
@@ -213,7 +213,7 @@ describe('Message API:', function () {
         // Just returning all messages for now, without considering the owner
         it('should return all Message addressed to a user', done => {
             request(app)
-                .get(baseURL + '/message/list') 
+                .get(baseURL + '/message/list')
                 .expect(httpStatus.OK)
                 .then(res => {
                     expect(res.body).to.be.an('array');  //changed res to res.body
@@ -227,7 +227,7 @@ describe('Message API:', function () {
         // TODO: Ruchita to write this test
         it('has an option to limit Message returned', done => {
             request(app)
-                .get(baseURL + '/message/list?limit=' + limit) 
+                .get(baseURL + '/message/list?limit=' + limit)
                 .expect(httpStatus.OK)
                 .then(res => {
                     expect(res.body).to.be.an('array');  //changed res to res.body
@@ -240,7 +240,7 @@ describe('Message API:', function () {
         // TODO: Ruchita to write this test
         it('has an option to limit by sender', done => {
             request(app)
-                .get(baseURL + '/message/list?from=' + userName) 
+                .get(baseURL + '/message/list?from=' + userName)
                 .expect(httpStatus.OK)
                 .then(res => {
                     expect(res.body).to.be.an('array');  //changed res to res.body
@@ -254,7 +254,7 @@ describe('Message API:', function () {
         // TODO: Ruchita to write this test
         it('has an option to return summaries', done => {
             request(app)
-                .get(baseURL + '/message/list?summary=' + summary) 
+                .get(baseURL + '/message/list?summary=' + summary)
                 .expect(httpStatus.OK)
                 .then(res => {
                     expect(res.body).to.be.an('array');  //changed res to res.body
@@ -267,7 +267,7 @@ describe('Message API:', function () {
         });
 
     });
-    
+
     // describe('GET /message/count/:userId', function () {
 
     //     let userId;
@@ -319,11 +319,11 @@ describe('Message API:', function () {
     //     });
 
     // });
-    
+
     describe('GET /message/get/:messageId', function () {
 
         let messageId;
-        
+
         before(done => {
             testMessageObject.owner = "test owner"; //forcing owner to be a specific value
             Message.create(testMessageObject)
@@ -378,9 +378,9 @@ describe('Message API:', function () {
 
     // TODO: this one is going to be hard
     // describe('GET /message/thread/:originalMessageId', () => {
-        
+
     //     let messageId;
-        
+
     //     before(done => {
     //         Message.create(testMessageObject)
     //             .then(message => {
@@ -416,60 +416,55 @@ describe('Message API:', function () {
 
     // });
 
-    // describe('DELETE /message/delete/:messageId', function () {
+    describe('DELETE /message/delete/:messageId', function () {
 
-    //     let messageId;
-        
-    //     beforeEach(done => {
-    //         Message.destroy({
-    //             where: {},
-    //             truncate: true
-    //         }).then(() => {
-    //             Message.create(testMessageObject)
-    //                 .then(message => {
-    //                     messageId = message.id;
-    //                     done();
-    //                 });
-    //         });
-    //     });
+        let messageId;
 
-    //     xit('should return OK', done => {
-    //         request(app)
-    //             .delete(baseURL + '/message/delete' + messageId)
-    //             .expect(httpStatus.OK)
-    //             .then(res => {
-    //                 expect(res.text).to.equal('OK');
-    //                 done();
-    //             })
-    //             .catch(done);
-    //     });
+        beforeEach(done => {
+            Message.destroy({
+                where: {},
+                truncate: true
+            }).then(() => {
+                Message.create(testMessageObject)
+                    .then(message => {
+                        messageId = message.id;
+                        done();
+                    });
+            });
+        });
 
-    //     xit('should return the deleted Message', done => {
-    //         request(app)
-    //             .delete(baseURL + '/message/delete' + messageId)
-    //             .expect(httpStatus.OK)
-    //             .then(res => {
-    //                 expect(res.body).to.deep.include(testMessageObject);
-    //                 done();
-    //             })
-    //             .catch(done);
-    //     });
+        it('should return OK', () => {
+            request(app)
+                .get(baseURL + '/message/delete/' + messageId)
+                .expect(httpStatus.OK)
+        });
 
-    //     xit('should delete the message from the DB', done => {
-    //         request(app)
-    //             .delete(baseURL + '/message/delete' + messageId)
-    //             .expect(httpStatus.OK)
-    //             .then(res => {
-    //                 let id = res.body.id;
-    //                 Message.findById(id)
-    //                     .then(message => {
-    //                         expect(message).to.be.null;
-    //                         done();
-    //                     });
-    //             })
-    //             .catch(done);
-    //     });
+        it('should return the deleted Message', done => {
+            request(app)
+                .delete(baseURL + '/message/delete/' + messageId)
+                .expect(httpStatus.OK)
+                .then(res => {
+                    expect(res.body).to.deep.include(testMessageObject);
+                    done();
+                })
+                .catch(done);
+        });
 
-    // });
-    
+        it('should soft delete message', done => {
+            request(app)
+                .delete(baseURL + '/message/delete/' + messageId)
+                .expect(httpStatus.OK)
+                .then(res => {
+                    let id = res.body.id;
+                    Message.unscoped().findById(id)
+                        .then(message => {
+                            expect(message.isDeleted).to.equal(true);
+                            done();
+                        });
+                })
+                .catch(done);
+        });
+
+    });
+
 });
