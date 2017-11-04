@@ -10,16 +10,24 @@ WORKDIR /app
 
 # only copy package.json initially so that `RUN yarn` layer is recreated only
 # if there are changes in package.json
-ADD package.json yarn.lock /app/
+ADD . /app/
+RUN yarn
 
-# --pure-lockfile: Don’t generate a yarn.lock lockfile
-RUN yarn --pure-lockfile
+# compile to ES5
+RUN yarn build
 
-# copy all file from current dir to /app in container
-COPY . /app/
+# set up dotenv
+RUN echo "NODE_ENV=${NODE_ENV}\n" >> .env &&\
+    echo "PORT=4001\n" >> .env &&\
+    echo "JWT_SECRET=${JWT_SECRET}" >> .env &&\
+    echo "PG_DB=${PG_DB}\n" >> .env &&\
+    echo "PG_PORT=${PG_PORT}\n" >> .env &&\
+    echo "PG_HOST=${PG_HOST}\n" >> .env &&\
+    echo "PG_USER=${PG_USER}\n" >> .env &&\
+    echo "PG_PASSWD=${PG_PASSWD}\n" >> .env
 
-# expose port 4000
-EXPOSE 4000
+# expose port 4001
+EXPOSE 4001
 
 # cmd to start service
-CMD [ "yarn", "start" ]
+CMD [ "node", "dist/index.js" ]
