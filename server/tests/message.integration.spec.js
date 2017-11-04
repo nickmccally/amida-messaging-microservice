@@ -9,6 +9,7 @@ import {
     Message,
     sequelize
 } from '../../config/sequelize';
+import config from '../../config/config'
 import _ from 'lodash';
 
 chai.use(require('chai-datetime'));
@@ -16,6 +17,7 @@ chai.use(require('chai-date-string'));
 
 const version = p.version.split('.').shift();
 const baseURL = (version > 0 ? `/api/v${version}` : '/api');
+const auth = config.testToken;
 
 const testMessageObject = {
     to: ['user1','user2'],
@@ -27,15 +29,17 @@ const testMessageObject = {
 const testMessageArray = [];
 const fromArray = ['user0','user1','user2','user3'];
 // 4 senders send message to 4 recipients each
-for (let i = 0; i < fromArray.length; i += 1) {
+fromArray.forEach(function(receiver) {
+  fromArray.forEach(function(sender) {
     testMessageArray.push({
-        to: ['user1','user2','user3','user4'],
-        from: fromArray[i],
+        to: fromArray,
+        from: sender,
         subject: 'Test Message',
         message: 'Test post please ignore',
-        owner: 'force owner',
+        owner: receiver
     })
-}
+  })
+})
 
 describe('Message API:', function () {
 
@@ -50,6 +54,7 @@ describe('Message API:', function () {
 
         it('should return OK', () => request(app)
             .post(baseURL + '/message/send')
+            .set('Authorization', `Bearer ${auth}`)
             .send(testMessageObject)
             .expect(httpStatus.OK)
         );
@@ -61,6 +66,7 @@ describe('Message API:', function () {
          */
         it('should return the sender\'s Message object', () => request(app)
             .post(baseURL + '/message/send')
+            .set('Authorization', `Bearer ${auth}`)
             .send(testMessageObject)
             .expect(httpStatus.OK)
             .then(res => {
@@ -76,6 +82,7 @@ describe('Message API:', function () {
         it('should create new Messages in the DB', done => {
             request(app)
                 .post(baseURL + '/message/send')
+                .set('Authorization', `Bearer ${auth}`)
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
                 .then(res => {
@@ -100,6 +107,7 @@ describe('Message API:', function () {
         it('returned message should have a createdAt timestamp', done => {
             request(app)
                 .post(baseURL + '/message/send')
+                .set('Authorization', `Bearer ${auth}`)
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
                 .then(res => {
@@ -113,6 +121,7 @@ describe('Message API:', function () {
         it('recipient message should have readAt set to NULL', done => {
             request(app)
                 .post(baseURL + '/message/send')
+                .set('Authorization', `Bearer ${auth}`)
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
                 .then(res => {
@@ -131,6 +140,7 @@ describe('Message API:', function () {
         it('sender message should have readAt set to createdAt time', done => {
             request(app)
                 .post(baseURL + '/message/send')
+                .set('Authorization', `Bearer ${auth}`)
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
                 .then(res => {
@@ -205,6 +215,7 @@ describe('Message API:', function () {
         it('should return OK', done => { //remove done, removed res.text
             request(app)
                 .get(baseURL + '/message/list')
+                .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
             done();
         });
@@ -214,11 +225,11 @@ describe('Message API:', function () {
         it('should return all Message addressed to a user', done => {
             request(app)
                 .get(baseURL + '/message/list')
+                .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => {
                     expect(res.body).to.be.an('array');  //changed res to res.body
-                    expect(res.body.from).to.equal(testMessageArray.from);
-                    expect(res.body.to).to.equal(testMessageArray.to);
+                    expect(res.body.length).to.equal(testMessageArray.length/fromArray.length);
                     done();
                 })
                 .catch(done);
@@ -228,6 +239,7 @@ describe('Message API:', function () {
         it('has an option to limit Message returned', done => {
             request(app)
                 .get(baseURL + '/message/list?limit=' + limit)
+                .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => {
                     expect(res.body).to.be.an('array');  //changed res to res.body
@@ -241,11 +253,11 @@ describe('Message API:', function () {
         it('has an option to limit by sender', done => {
             request(app)
                 .get(baseURL + '/message/list?from=' + userName)
+                .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => {
                     expect(res.body).to.be.an('array');  //changed res to res.body
-                    expect(res.body[0].from).to.equal(testMessageArray[0].from);
-                    expect(res.body[0].to).to.deep.equal(testMessageArray[0].to);
+                    expect(res.body[0].from).to.equal(userName);
                     done();
                 })
                 .catch(done);
@@ -255,10 +267,10 @@ describe('Message API:', function () {
         it('has an option to return summaries', done => {
             request(app)
                 .get(baseURL + '/message/list?summary=' + summary)
+                .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => {
                     expect(res.body).to.be.an('array');  //changed res to res.body
-                    expect(res.body[0].from).to.equal(testMessageArray[0].from);
                     expect(res.body[0].to).to.be.undefined;
                     expect(res.body[0].message).to.be.undefined;
                     done();
@@ -325,7 +337,7 @@ describe('Message API:', function () {
         let messageId;
 
         before(done => {
-            testMessageObject.owner = "test owner"; //forcing owner to be a specific value
+            testMessageObject.owner = "user0"; //forcing owner to be a specific value
             Message.create(testMessageObject)
                 .then(message => {
                     messageId = message.id;
@@ -344,12 +356,14 @@ describe('Message API:', function () {
         it('should return OK', () => { //removed done, removed res.text
             request(app)
                 .get(baseURL + '/message/get/' + messageId)
+                .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
         });
 
         it('should return the specified Message', done => {
             request(app)
                 .get(baseURL + '/message/get/' + messageId)
+                .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => {
                     expect(res.body.to).to.deep.equal(testMessageObject.to);
@@ -365,6 +379,7 @@ describe('Message API:', function () {
         it('should mark the Message retrieved as read', done => {
             request(app)
                 .get(baseURL + '/message/get/' + messageId)
+                .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => {
                     expect(res.body.readAt).to.not.be.null;
@@ -436,12 +451,14 @@ describe('Message API:', function () {
         it('should return OK', () => {
             request(app)
                 .get(baseURL + '/message/delete/' + messageId)
+                .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
         });
 
         it('should return the deleted Message', done => {
             request(app)
                 .delete(baseURL + '/message/delete/' + messageId)
+                .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => {
                     expect(res.body).to.deep.include(testMessageObject);
@@ -453,6 +470,7 @@ describe('Message API:', function () {
         it('should soft delete message', done => {
             request(app)
                 .delete(baseURL + '/message/delete/' + messageId)
+                .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => {
                     let id = res.body.id;

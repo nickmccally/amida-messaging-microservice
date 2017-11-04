@@ -2,8 +2,12 @@ import express from 'express';
 import validate from 'express-validation';
 import paramValidation from '../../config/param-validation';
 import messageCtrl from '../controllers/message.controller';
+import auth from '../../config/passport'
 
+const passportAuth = auth();
 const router = express.Router(); // eslint-disable-line new-cap
+
+router.use(passportAuth.authenticate);
 
 router.route('/send')
     .post(validate(paramValidation.sendMessage), messageCtrl.send);

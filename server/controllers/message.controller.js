@@ -7,7 +7,7 @@ const Message = db.Message;
  * Load message and append to req.
  */
 function load(req, res, next, id) {
-    Message.findById(id)
+    Message.scope({ method: ['forUser', req.user]}).findById(id)
     .then((message) => {
         if (!message) {
             const e = new Error('Message does not exist');
@@ -88,6 +88,7 @@ function send(req, res, next) {
 function list(req, res) {
     const queryObject = {};
 
+
     if (req.query.from) {
         const whereObject = {};
         whereObject.from = req.query.from;
@@ -103,7 +104,7 @@ function list(req, res) {
     }
 
     Message
-        .findAll(queryObject)
+        .scope({ method: ['forUser', req.user]}).findAll(queryObject)
         .then(results => res.send(results));
 }
 

@@ -64,6 +64,16 @@ module.exports = (sequelize, DataTypes) => {
           where: {
             isDeleted: false
           }
+        },
+        scopes: {
+          forUser: function (user) {
+            return {
+              where: {
+                owner: user.username,
+                isDeleted: false
+              }
+            }
+          }
         }
       }
     );
