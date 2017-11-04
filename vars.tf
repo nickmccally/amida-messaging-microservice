@@ -42,3 +42,7 @@ variable "availability_zones" {
 variable "port" {
   default = 4000
 }
+
+variable "service_name" {
+  default = "messaging"
+}
