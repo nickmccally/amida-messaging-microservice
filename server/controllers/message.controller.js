@@ -86,17 +86,25 @@ function send(req, res, next) {
 // This needs integration with auth microservice
 // Query paramters: 'from', 'summary', 'limit'
 function list(req, res) {
-    const queryObject = {};
+    const queryObject = {
+      where: {
+        isArchived: false
+      }
+    };
 
 
     if (req.query.from) {
         const whereObject = {};
         whereObject.from = req.query.from;
-        queryObject.where = whereObject;
+        queryObject.where = {...queryObject.where, ...whereObject};
     }
 
     if (req.query.limit) {
         queryObject.limit = req.query.limit;
+    }
+
+    if (req.query.archived) {
+        queryObject.where.isArchived = true;
     }
 
     if (req.query.summary) {
@@ -125,4 +133,18 @@ function remove(req,res) {
     return res.send(req.message);
 }
 
-export default { send, get, list, count, remove, load };
+/**
+ * Archive
+ * sets isArchived of message with the userID to true
+ * @returns {Message}
+ */
+function archive(req,res) {
+    if (req.message) {
+        req.message.update({
+            isArchived: true,
+        });
+    }
+    return res.send(req.message);
+}
+
+export default { send, get, list, count, remove, load, archive };

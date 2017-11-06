@@ -28,6 +28,9 @@ router.route('/get/:messageId')
 router.route('/delete/:messageId')
     .delete(messageCtrl.remove);
 
+router.route('/archive/:messageId')
+    .put(messageCtrl.archive);
+
 /** Load message when API with route parameter is hit */
 router.param('messageId', messageCtrl.load);
 
