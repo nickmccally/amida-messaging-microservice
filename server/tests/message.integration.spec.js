@@ -485,4 +485,59 @@ describe('Message API:', function () {
 
     });
 
+
+    describe('PUT /message/archive/:messageId', function () {
+
+        let messageId;
+
+        beforeEach(done => {
+            Message.destroy({
+                where: {},
+                truncate: true
+            }).then(() => {
+                Message.create(testMessageObject)
+                    .then(message => {
+                        messageId = message.id;
+                        done();
+                    });
+            });
+        });
+
+        it('should return OK', () => {
+            request(app)
+                .get(baseURL + '/message/archive/' + messageId)
+                .set('Authorization', `Bearer ${auth}`)
+                .expect(httpStatus.OK)
+        });
+
+        it('should return the archived Message', done => {
+            request(app)
+                .put(baseURL + '/message/archive/' + messageId)
+                .set('Authorization', `Bearer ${auth}`)
+                .expect(httpStatus.OK)
+                .then(res => {
+                    expect(res.body).to.deep.include(testMessageObject);
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should archive message', done => {
+            request(app)
+                .put(baseURL + '/message/archive/' + messageId)
+                .set('Authorization', `Bearer ${auth}`)
+                .expect(httpStatus.OK)
+                .then(res => {
+                    let id = res.body.id;
+                    Message.findById(id)
+                        .then(message => {
+                            expect(message.isArchived).to.equal(true);
+                            done();
+                        });
+                })
+                .catch(done);
+        });
+
+    });
+
 });
