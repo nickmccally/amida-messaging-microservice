@@ -7,19 +7,18 @@ const Message = db.Message;
  * Load message and append to req.
  */
 function load(req, res, next, id) {
-    Message.scope({ method: ['forUser', req.user]})
-    .findById(id)
-    .then((message) => {
-        if (!message) {
-            const e = new Error('Message does not exist');
-            e.status = httpStatus.NOT_FOUND;
-            return next(e);
-        }
-        console.log("load-req.message: "+req.message);
-        req.message = message; // eslint-disable-line no-param-reassign
-        return next();
-    })
-    .catch(e => next(e));
+    Message.scope({ method: ['forUser', req.user] })
+        .findById(id)
+        .then((message) => {
+            if (!message) {
+                const e = new Error('Message does not exist');
+                e.status = httpStatus.NOT_FOUND;
+                return next(e);
+            }
+            req.message = message; // eslint-disable-line no-param-reassign
+            return next();
+        })
+        .catch(e => next(e));
 }
 
 /**
@@ -45,7 +44,6 @@ function get(req, res) {
  */
 function send(req, res, next) {
     // Each iteration saves the recipient's name from the to[] array as the owner to the db.
-    const createdTime = new Date();
     const messageArray = [];
 
     // Saves separate instance where each recipient is the owner
@@ -88,14 +86,13 @@ function send(req, res, next) {
 // Query paramters: 'from', 'summary', 'limit'
 function list(req, res) {
     const queryObject = {
-      where: {}
+        where: {},
     };
-
 
     if (req.query.from) {
         const whereObject = {};
         whereObject.from = req.query.from;
-        queryObject.where = {...queryObject.where, ...whereObject};
+        queryObject.where = { ...queryObject.where, ...whereObject };
     }
 
     if (req.query.limit) {
@@ -109,13 +106,13 @@ function list(req, res) {
     if (req.query.archived) {
         queryObject.where.isArchived = true;
         queryObject.where.isDeleted = false;
-        queryObject.where.owner = req.user.username
+        queryObject.where.owner = req.user.username;
         Message
             .unscoped().findAll(queryObject)
             .then(results => res.send(results));
     } else {
-      Message
-          .scope({ method: ['forUser', req.user]})
+        Message
+          .scope({ method: ['forUser', req.user] })
           .findAll(queryObject)
           .then(results => res.send(results));
     }
@@ -128,12 +125,9 @@ function count() {}
  * sets isDelete of message with the userID to true
  * @returns {Message}
  */
-function remove(req,res) {
+function remove(req, res) {
     if (req.message) {
-    console.log("req.message: "+JSON.stringify(req.message));
-        req.message.update({
-            isDeleted: true,
-        });
+        req.message.update({ isDeleted: true });
     }
     return res.send(req.message);
 }
@@ -143,7 +137,7 @@ function remove(req,res) {
  * sets isArchived of message with the userID to true
  * @returns {Message}
  */
-function archive(req,res) {
+function archive(req, res) {
     if (req.message) {
         req.message.update({
             isArchived: true,

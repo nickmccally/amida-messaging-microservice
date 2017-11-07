@@ -13,7 +13,7 @@ import winstonInstance from './winston';
 import routes from '../server/routes/index.route';
 import config from './config';
 import APIError from '../server/helpers/APIError';
-import auth from './passport'
+import auth from './passport';
 
 const passportAuth = auth();
 const app = express();

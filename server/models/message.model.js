@@ -56,33 +56,33 @@ module.exports = (sequelize, DataTypes) => {
         isDeleted: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: false
+            defaultValue: false,
         },
         isArchived: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: false
-        }
-      },
-      {
-        defaultScope: {
-          where: {
-            isDeleted: false,
-            isArchived: false
-          }
+            defaultValue: false,
         },
-        scopes: {
-          forUser: function (user) {
-            return {
-              where: {
-                owner: user.username,
-                isDeleted: false,
-                isArchived: false
-              }
-            }
-          }
+    },
+        {
+            defaultScope: {
+                where: {
+                    isDeleted: false,
+                    isArchived: false,
+                },
+            },
+            scopes: {
+                forUser(user) {
+                    return {
+                        where: {
+                            owner: user.username,
+                            isDeleted: false,
+                            isArchived: false,
+                        },
+                    };
+                },
+            },
         }
-      }
     );
 
     // Class methods

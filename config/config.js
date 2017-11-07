@@ -23,7 +23,7 @@ const envVarsSchema = Joi.object({
     PG_PASSWD: Joi.string().allow('')
         .description('Postgres password'),
     TEST_TOKEN: Joi.string().allow('')
-        .description('Test auth token')
+        .description('Test auth token'),
 }).unknown()
     .required();
 
