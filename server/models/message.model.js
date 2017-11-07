@@ -75,7 +75,8 @@ module.exports = (sequelize, DataTypes) => {
             return {
               where: {
                 owner: user.username,
-                isDeleted: false
+                isDeleted: false,
+                isArchived: false
               }
             }
           }

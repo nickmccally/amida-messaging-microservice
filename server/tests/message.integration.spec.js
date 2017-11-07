@@ -529,11 +529,12 @@ describe('Message API:', function () {
                 .expect(httpStatus.OK)
                 .then(res => {
                     let id = res.body.id;
-                    Message.findById(id)
-                        .then(message => {
-                            expect(message.isArchived).to.equal(true);
-                            done();
-                        });
+                    Message.unscoped()
+                           .findById(id)
+                           .then(message => {
+                             expect(message.isArchived).to.equal(true);
+                             done();
+                           });
                 })
                 .catch(done);
         });

@@ -87,9 +87,7 @@ function send(req, res, next) {
 // Query paramters: 'from', 'summary', 'limit'
 function list(req, res) {
     const queryObject = {
-      where: {
-        isArchived: false
-      }
+      where: {}
     };
 
 
@@ -103,17 +101,21 @@ function list(req, res) {
         queryObject.limit = req.query.limit;
     }
 
-    if (req.query.archived) {
-        queryObject.where.isArchived = true;
-    }
-
     if (req.query.summary) {
         queryObject.attributes = ['subject', 'from', 'createdAt'];
     }
 
-    Message
-        .scope({ method: ['forUser', req.user]}).findAll(queryObject)
-        .then(results => res.send(results));
+    if (req.query.archived) {
+        queryObject.where.isArchived = true;
+        Message
+            .unscoped()
+            .scope({ method: ['forUser', req.user]}).findAll(queryObject)
+            .then(results => res.send(results));
+    } else {
+      Message
+          .scope({ method: ['forUser', req.user]}).findAll(queryObject)
+          .then(results => res.send(results));
+    }
 }
 
 function count() {}
