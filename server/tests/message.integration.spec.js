@@ -534,7 +534,7 @@ describe('Message API:', function () {
                            .then(message => {
                              expect(message.isArchived).to.equal(true);
                              done();
-                           });
+                          });
                 })
                 .catch(done);
         });

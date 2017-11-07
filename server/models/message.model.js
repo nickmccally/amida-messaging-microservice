@@ -67,7 +67,8 @@ module.exports = (sequelize, DataTypes) => {
       {
         defaultScope: {
           where: {
-            isDeleted: false
+            isDeleted: false,
+            isArchived: false
           }
         },
         scopes: {

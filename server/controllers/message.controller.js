@@ -7,7 +7,8 @@ const Message = db.Message;
  * Load message and append to req.
  */
 function load(req, res, next, id) {
-    Message.scope({ method: ['forUser', req.user]}).findById(id)
+    Message.scope({ method: ['forUser', req.user]})
+    .findById(id)
     .then((message) => {
         if (!message) {
             const e = new Error('Message does not exist');
@@ -107,13 +108,15 @@ function list(req, res) {
 
     if (req.query.archived) {
         queryObject.where.isArchived = true;
+        queryObject.where.isDeleted = false;
+        queryObject.where.owner = req.user.username
         Message
-            .unscoped()
-            .scope({ method: ['forUser', req.user]}).findAll(queryObject)
+            .unscoped().findAll(queryObject)
             .then(results => res.send(results));
     } else {
       Message
-          .scope({ method: ['forUser', req.user]}).findAll(queryObject)
+          .scope({ method: ['forUser', req.user]})
+          .findAll(queryObject)
           .then(results => res.send(results));
     }
 }
