@@ -134,32 +134,126 @@ describe('Message API:', function () {
 
     describe('POST /message/reply/:messageId', () => {
 
+        const goodReplyMessageObject = {
+            to: ['user1','user0'],
+            from: 'user2',
+            subject: 'RE: Test Message',
+            message: 'Test reply please ignore',
+        };
+
+        const badReplyMessageObject = {
+            to: ['user1','user0'],
+            from: 'userBad',
+            subject: 'RE: Test Message',
+            message: 'Bad reply please ignore',
+        };
+
+        const secondReplyMessageObject = {
+            to: ['user2','user0'],
+            from: 'user1',
+            subject: 'RE: RE: Test Message',
+            message: 'I have to keep sending replies',
+        };
+
         let messageId;
         
-        before(done => {
-            Message.create(testMessageObject)
-                .then(message => {
-                    messageId = message.id;
-                    done();
+        before(() => Message
+            .create(testMessageObject)
+            .then((message) => {
+                messageId = message.id;
+                return;
+            })
+        );
+
+        it('should return OK', () => request(app)
+            .post(`${baseUrl}/message/reply/${messageId}`)
+            .send(goodReplyMessageObject)
+            .expect(httpStatus.OK)
+        );
+
+        it('should return the response message owned by the sender', () => request(app)
+            .post(`${baseUrl}/message/reply/${messageId}`)
+            .send(goodReplyMessageObject)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body.to).to.deep.equal(goodReplyMessageObject.to);
+                expect(res.body.from).to.equal(goodReplyMessageObject.from);
+                expect(res.body.owner).to.equal(goodReplyMessageObject.from);
+                expect(res.body.subject).to.equal(goodReplyMessageObject.subject);
+                expect(res.body.message).to.equal(goodReplyMessageObject.message);
+                expect(res.body.originalMessageId).to.equal(messageId);
+                expect(res.body.parentMessageId).to.equal(messageId);
+            })
+        );
+
+        it('should create new messages in the DB with appropriate threaded message IDs', () => request(app)
+            .post(`${baseUrl}/message/reply/${messageId}`)
+            .send(goodReplyMessageObject)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                // Message 1: owned by respondent (user2)
+                const m1 = Message.findOne({where: {
+                    owner: goodReplyMessageObject.from,
+                    parentMessageId: messageId
+                }});
+
+                // Message 2: owned by user0
+                const m2 = Message.findOne({where: {
+                    owner: goodReplyMessageObject.to[0],
+                    parentMessageId: messageId
+                }});
+
+                // Message 3: owned by user1
+                const m3 = Message.findOne({where: {
+                    owner: goodReplyMessageObject.to[1],
+                    parentMessageId: messageId
+                }});
+
+                Promise.join(m1, m2, m3, (res1, res2, res3) => {
+                    expect(res1.originalMessageId).to.equal(messageId);
+                    expect(res1.message).to.equal(goodReplyMessageObject.message);
+                    expect(res2.originalMessageId).to.equal(messageId);
+                    expect(res2.message).to.equal(goodReplyMessageObject.message);
+                    expect(res3.originalMessageId).to.equal(messageId);
+                    expect(res3.message).to.equal(goodReplyMessageObject.message);
                 });
-        });
+            })
+        );
 
-        it('should return OK', done => {
-            request(app)
-                .post(baseURL + '/message/send')
-                .send(testMessageObject)
-                .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.text).to.equal('OK');
-                    done();
-                })
-                .catch(done);
-        });
+        it('should return an error if the messageId does not exist', () => request(app)
+            .post(`${baseUrl}/message/reply/99999`)
+            .send(goodReplyMessageObject)
+            .expect(httpStatus.NOT_FOUND)
+        );
 
-        // TODO leaving these for Jacob to work on
-        it('should return the response message owned by the sender');
+        it('should not allow a reply if the sender was not a recipient of the message specified', () => request(app)
+            .post(`${baseUrl}/message/reply/${messageId}`)
+            .send(badReplyMessageObject)
+            .expect(httpStatus.FORBIDDEN)
+        );
 
-        it('should create new messages in the DB with appropriate threaded message IDs');
+        it('should maintain original ID while incrementing parent ID on multiple replies', () => request(app)
+            .post(`${baseUrl}/message/reply/${messageId}`)
+            .send(goodReplyMessageObject)
+            .expect(httpStatus.OK)
+            .then((res1) => {
+                let replyId = res.body.id;
+                return request(app)
+                    .post(`${baseUrl}/message/reply/${replyId}`)
+                    .send(secondReplyMessageObject)
+                    .expect(httpStatus.OK)
+                    .then((res2) => {
+                        expect(res2.body.to).to.deep.equal(secondReplyMessageObject.to);
+                        expect(res2.body.from).to.equal(secondReplyMessageObject.from);
+                        expect(res2.body.owner).to.equal(secondReplyMessageObject.from);
+                        expect(res2.body.subject).to.equal(secondReplyMessageObject.subject);
+                        expect(res2.body.message).to.equal(secondReplyMessageObject.message);
+                        expect(res2.body.originalMessageId).to.equal(messageId);
+                        expect(res2.body.parentMessageId).to.equal(replyId);
+                        return;
+                    })
+            })
+        );
 
     });
 
