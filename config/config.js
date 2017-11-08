@@ -22,6 +22,8 @@ const envVarsSchema = Joi.object({
         .description('Postgres username'),
     PG_PASSWD: Joi.string().allow('')
         .description('Postgres password'),
+    TEST_TOKEN: Joi.string().allow('')
+        .description('Test auth token'),
 }).unknown()
     .required();
 
@@ -34,6 +36,7 @@ const config = {
     env: envVars.NODE_ENV,
     port: envVars.PORT,
     jwtSecret: envVars.JWT_SECRET,
+    testToken: envVars.TEST_TOKEN,
     postgres: {
         db: envVars.PG_DB,
         port: envVars.PG_PORT,
