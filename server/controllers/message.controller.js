@@ -26,10 +26,10 @@ function load(req, res, next, id) {
  * @returns {Message}
  */
 function get(req, res) {
-    if (req.message) {
-        req.message.update({
+    if (req.message.readAt == null) {
+        return req.message.update({
             readAt: new Date(),
-        });
+        }).then(() => res.send(req.message));
     }
     return res.send(req.message);
 }

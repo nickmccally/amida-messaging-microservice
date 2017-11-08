@@ -371,6 +371,20 @@ describe('Message API:', function () {
             })
         );
 
+        it('should not change the readAt timestamp on multiple get requests', () => request(app)
+            .get(baseURL + '/message/get/' + messageId)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res1) => {
+                let firstTimestamp = res1.body.readAt;
+                return request(app)
+                    .get(baseURL + '/message/get/' + messageId)
+                    .set('Authorization', `Bearer ${auth}`)
+                    .expect(httpStatus.OK)
+                    .then((res2) => expect(res2.body.readAt).to.equal(firstTimestamp))
+            })
+        );
+
     });
 
     // TODO: this one is going to be hard
