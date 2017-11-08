@@ -14,7 +14,6 @@ function load(req, res, next, id) {
             e.status = httpStatus.NOT_FOUND;
             return next(e);
         }
-        console.log("load-req.message: "+req.message);
         req.message = message; // eslint-disable-line no-param-reassign
         return next();
     })
@@ -44,7 +43,6 @@ function get(req, res) {
  */
 function send(req, res, next) {
     // Each iteration saves the recipient's name from the to[] array as the owner to the db.
-    const createdTime = new Date();
     const messageArray = [];
 
     // Saves separate instance where each recipient is the owner
@@ -55,12 +53,8 @@ function send(req, res, next) {
             subject: req.body.subject,
             message: req.body.message,
             owner: req.body.to[i],
-<<<<<<< HEAD
             created: new Date(),
             isDeleted: false,
-=======
-            createdAt: createdTime,
->>>>>>> develop
         });
     }
 
@@ -73,23 +67,15 @@ function send(req, res, next) {
         subject: req.body.subject,
         message: req.body.message,
         owner: req.body.from,
-<<<<<<< HEAD
         created: new Date(),
         readAt: new Date(),
         isDeleted: false,
-    }).save()
-      .then(savedMessage => res.json(savedMessage))
-      .catch(e => next(e));
-=======
-        createdAt: createdTime,
-        readAt: createdTime,
     });
 
     // once the bulkCreate and create promises resolve, send the sender's saved message or an error
     Promise
         .join(bulkCreate, messageCreate, (bulkResult, messageResult) => res.json(messageResult))
         .catch(e => next(e));
->>>>>>> develop
 }
 
 // returns a list of messages
@@ -126,9 +112,8 @@ function count() {}
  * sets isDelete of message with the userID to true
  * @returns {Message}
  */
-function remove(req,res) {
+function remove(req, res) {
     if (req.message) {
-    console.log("req.message: "+JSON.stringify(req.message));
         req.message.update({
             isDeleted: true,
         });
