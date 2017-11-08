@@ -5,19 +5,21 @@ const Message = db.Message;
 
 /**
  * Load message and append to req.
+ * Message cannot be deleted or archived.
  */
 function load(req, res, next, id) {
-    Message.findById(id)
-    .then((message) => {
-        if (!message) {
-            const e = new Error('Message does not exist');
-            e.status = httpStatus.NOT_FOUND;
-            return next(e);
-        }
-        req.message = message; // eslint-disable-line no-param-reassign
-        return next();
-    })
-    .catch(e => next(e));
+    Message.scope({ method: ['forUser', req.user] })
+        .findById(id)
+        .then((message) => {
+            if (!message) {
+                const e = new Error('Message does not exist');
+                e.status = httpStatus.NOT_FOUND;
+                return next(e);
+            }
+            req.message = message; // eslint-disable-line no-param-reassign
+            return next();
+        })
+        .catch(e => next(e));
 }
 
 /**
@@ -25,7 +27,12 @@ function load(req, res, next, id) {
  * @returns {Message}
  */
 function get(req, res) {
-    return res.json(req.message);
+    if (req.message.readAt == null) {
+        return req.message.update({
+            readAt: new Date(),
+        }).then(() => res.send(req.message));
+    }
+    return res.send(req.message);
 }
 
 /**
@@ -38,8 +45,8 @@ function get(req, res) {
  */
 function send(req, res, next) {
     // Each iteration saves the recipient's name from the to[] array as the owner to the db.
-    const createdTime = new Date();
     const messageArray = [];
+    const newTime = new Date();
 
     // Saves separate instance where each recipient is the owner
     for (let i = 0; i < req.body.to.length; i += 1) {
@@ -49,7 +56,8 @@ function send(req, res, next) {
             subject: req.body.subject,
             message: req.body.message,
             owner: req.body.to[i],
-            createdAt: createdTime,
+            createdAt: new Date(),
+            isDeleted: false,
         });
     }
 
@@ -62,8 +70,9 @@ function send(req, res, next) {
         subject: req.body.subject,
         message: req.body.message,
         owner: req.body.from,
-        createdAt: createdTime,
-        readAt: createdTime,
+        createdAt: newTime,
+        readAt: newTime,
+        isDeleted: false,
     });
 
     // once the bulkCreate and create promises resolve, send the sender's saved message or an error
@@ -72,10 +81,72 @@ function send(req, res, next) {
         .catch(e => next(e));
 }
 
-function list() {}
+// returns a list of messages
+// Currently, there is no distinction between a message created by a user, &
+// a message sent by that user, since he is the 'owner' in both cases.
+// This needs integration with auth microservice
+// Query paramters: 'from', 'summary', 'limit'
+// To return archived messages use url param archived=true
+function list(req, res) {
+    const queryObject = {
+        where: {},
+    };
+
+    if (req.query.from) {
+        const whereObject = {};
+        whereObject.from = req.query.from;
+        queryObject.where = { ...queryObject.where, ...whereObject };
+    }
+
+    if (req.query.limit) {
+        queryObject.limit = req.query.limit;
+    }
+
+    if (req.query.summary) {
+        queryObject.attributes = ['subject', 'from', 'createdAt'];
+    }
+
+    if (req.query.archived && req.query.archived === 'true') {
+        queryObject.where.isArchived = true;
+        queryObject.where.isDeleted = false;
+        queryObject.where.owner = req.user.username;
+        Message
+            .unscoped().findAll(queryObject)
+            .then(results => res.send(results));
+    } else {
+        Message
+          .scope({ method: ['forUser', req.user] })
+          .findAll(queryObject)
+          .then(results => res.send(results));
+    }
+}
 
 function count() {}
 
-function remove() {}
+/**
+ * Soft delete
+ * sets isDelete of message with the userID to true
+ * @returns {Message}
+ */
+function remove(req, res) {
+    if (req.message) {
+        req.message.update({ isDeleted: true });
+    }
+    return res.send(req.message);
+}
 
-export default { send, get, list, count, remove, load };
+/**
+ * Archive
+ * sets isArchived of message with the userID to true
+ * @returns {Message}
+ */
+function archive(req, res) {
+    if (req.message) {
+        req.message.update({
+            isArchived: true,
+        });
+    }
+    return res.send(req.message);
+}
+
+export default { send, get, list, count, remove, load, archive };

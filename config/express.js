@@ -13,7 +13,9 @@ import winstonInstance from './winston';
 import routes from '../server/routes/index.route';
 import config from './config';
 import APIError from '../server/helpers/APIError';
+import auth from './passport';
 
+const passportAuth = auth();
 const app = express();
 
 if (config.env === 'development') {
@@ -45,6 +47,8 @@ if (config.env === 'development') {
         colorStatus: true, // Color the status code (default green, 3XX cyan, 4XX yellow, 5XX red).
     }));
 }
+
+app.use(passportAuth.initialize());
 
 // mount all routes on /api path
 app.use('/api', routes);
