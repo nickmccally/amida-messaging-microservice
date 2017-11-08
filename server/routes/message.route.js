@@ -12,13 +12,20 @@ router.use(passportAuth.authenticate);
 router.route('/send')
     .post(validate(paramValidation.sendMessage), messageCtrl.send);
 
-// userId should not exist;
-// url should contain: ?limit=number, ?from=username, ?summary=true/false
+/**
+ * url params:
+ * - limit: number of messages to return
+ * - from: filter on message sender by username
+ * - summary: boolean, can return a summary version of messages
+ */
 router.route('/list/')
     .get(messageCtrl.list);
 
-// userId should not exist; adding 'owner' for now; remove after integrating with auth service;
-// url should contain: ?owner=username, ?option=unread/all
+/**
+ * url params:
+ * - owner: username of owner of messages to count
+ * - option: unread/all
+ */
 router.route('/count/')
     .get(messageCtrl.count);
 

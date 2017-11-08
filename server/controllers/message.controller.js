@@ -71,8 +71,8 @@ function send(req, res, next) {
         created: new Date(),
         readAt: new Date(),
         isDeleted: false,
-    }).then(savedMessage => res.json(savedMessage))
-      .catch(e => next(e));
+    });
+
     // once the bulkCreate and create promises resolve, send the sender's saved message or an error
     Promise
         .join(bulkCreate, messageCreate, (bulkResult, messageResult) => res.json(messageResult))

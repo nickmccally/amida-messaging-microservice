@@ -188,20 +188,20 @@ describe('Message API:', function () {
     // });
 
     //parameters: from, summary, limit
-    describe('GET /message/list?from=username&limit=number&summary=true', function () {
-
+    describe('GET /message/list', function () {
         let userName;
         let limit = 2;
         let summary = true;
 
-        before(done => {Message.destroy({
-                            where: {},
-                            truncate: true
+        before(done => {
+            Message.destroy({
+                where: {},
+                truncate: true
             }).then(message => {
-            Message.bulkCreate(testMessageArray).then(messages => {
-                userName = messages[0].from;
-                done();
-            });
+                Message.bulkCreate(testMessageArray).then(messages => {
+                    userName = messages[0].from;
+                    done();
+                });
             });
         });
 
@@ -209,75 +209,64 @@ describe('Message API:', function () {
             Message.destroy({
                 where: {},
                 truncate: true
-            })
-            done();
+            }).then(() => done());
         });
 
-        it('should return OK', done => { //remove done, removed res.text
-            request(app)
-                .get(baseURL + '/message/list')
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-            done();
-        });
+        it('should return OK', () => request(app)
+            .get(baseURL + '/message/list')
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+        );
 
         // this cannot be tested correctly without auth microservice.
         // Just returning all messages for now, without considering the owner
-        it('should return all Message addressed to a user', done => {
-            request(app)
-                .get(baseURL + '/message/list')
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.body).to.be.an('array');  //changed res to res.body
-                    expect(res.body.length).to.equal(testMessageArray.length/fromArray.length);
-                    done();
-                })
-                .catch(done);
-        });
+        it('should return all Messages addressed to a user', () => request(app)
+            .get(baseURL + '/message/list')
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.be.an('array');
+                expect(res.body.from).to.equal(testMessageArray.from);
+                expect(res.body.to).to.equal(testMessageArray.to);
+                return;
+            })
+        );
 
-        // TODO: Ruchita to write this test
-        it('has an option to limit Message returned', done => {
-            request(app)
-                .get(baseURL + '/message/list?limit=' + limit)
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.body).to.be.an('array');  //changed res to res.body
-                    expect(res.body.length).to.equal(limit);
-                    done();
-                })
-                .catch(done);
-        });
+        it('has an option to limit Messages returned', () => request(app)
+            .get(baseURL + '/message/list?limit=' + limit)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(res => {
+                expect(res.body).to.be.an('array');
+                expect(res.body.length).to.be.at.most(limit);
+                return;
+            })
+        );
 
-        // TODO: Ruchita to write this test
-        it('has an option to limit by sender', done => {
-            request(app)
-                .get(baseURL + '/message/list?from=' + userName)
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.body).to.be.an('array');  //changed res to res.body
-                    expect(res.body[0].from).to.equal(userName);
-                    done();
-                })
-                .catch(done);
-        });
+        it('has an option to limit by sender', () => request(app)
+            .get(baseURL + '/message/list?from=' + userName)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(res => {
+                expect(res.body).to.be.an('array');
+                expect(res.body[0].from).to.equal(testMessageArray[0].from);
+                expect(res.body[0].to).to.deep.equal(testMessageArray[0].to);
+                return;
+            })
+        );
 
-        // TODO: Ruchita to write this test
-        it('has an option to return summaries', done => {
-            request(app)
-                .get(baseURL + '/message/list?summary=' + summary)
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.body).to.be.an('array');  //changed res to res.body
-                    expect(res.body[0].to).to.be.undefined;
-                    expect(res.body[0].message).to.be.undefined;
-                    done();
-                })
-                .catch(done);
-        });
+        it('has an option to return summaries', () => request(app)
+            .get(baseURL + '/message/list?summary=' + summary)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(res => {
+                expect(res.body).to.be.an('array');
+                expect(res.body[0].from).to.equal(testMessageArray[0].from);
+                expect(res.body[0].to).to.be.undefined;
+                expect(res.body[0].message).to.be.undefined;
+                return;
+            })
+        );
 
     });
 
@@ -334,7 +323,6 @@ describe('Message API:', function () {
     // });
 
     describe('GET /message/get/:messageId', function () {
-
         let messageId;
 
         before(done => {
@@ -347,48 +335,41 @@ describe('Message API:', function () {
         });
 
         after(done => {
-                Message.destroy({
-                    where: {},
-                    truncate: true
-                })
-            done();
+            Message.destroy({
+                where: {},
+                truncate: true
+            }).then(() => done())
         });
 
-        it('should return OK', () => { //removed done, removed res.text
-            request(app)
-                .get(baseURL + '/message/get/' + messageId)
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-        });
+        it('should return OK', () => request(app)
+            .get(baseURL + '/message/get/' + messageId)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+        );
 
-        it('should return the specified Message', done => {
-            request(app)
-                .get(baseURL + '/message/get/' + messageId)
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.body.to).to.deep.equal(testMessageObject.to);
-                    expect(res.body.from).to.equal(testMessageObject.from);
-                    expect(res.body.subject).to.equal(testMessageObject.subject);
-                    expect(res.body.message).to.equal(testMessageObject.message);
-                    //not checking for owner here because that value was forced to a string
-                    done();
-                })
-                .catch(done);
-        });
+        it('should return the specified Message', () => request(app)
+            .get(baseURL + '/message/get/' + messageId)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(res => {
+                expect(res.body.to).to.deep.equal(testMessageObject.to);
+                expect(res.body.from).to.equal(testMessageObject.from);
+                expect(res.body.subject).to.equal(testMessageObject.subject);
+                expect(res.body.message).to.equal(testMessageObject.message);
+                //not checking for owner here because that value was forced to a string
+                return;
+            })
+        );
 
-        it('should mark the Message retrieved as read', done => {
-            request(app)
-                .get(baseURL + '/message/get/' + messageId)
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.body.readAt).to.not.be.null;
-                    expect(res.body.readAt).to.be.a.dateString();
-                    done();
-                })
-                .catch(done);
-        });
+        it('should mark the Message retrieved as read', () => request(app)
+            .get(baseURL + '/message/get/' + messageId)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(res => {
+                expect(res.body.readAt).to.not.be.null;
+                expect(res.body.readAt).to.be.a.dateString();
+            })
+        );
 
     });
 
