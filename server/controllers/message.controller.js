@@ -85,6 +85,7 @@ function send(req, res, next) {
 // a message sent by that user, since he is the 'owner' in both cases.
 // This needs integration with auth microservice
 // Query paramters: 'from', 'summary', 'limit'
+//To return archived messages use url param archived=true
 function list(req, res) {
     const queryObject = {
         where: {},
@@ -104,7 +105,7 @@ function list(req, res) {
         queryObject.attributes = ['subject', 'from', 'createdAt'];
     }
 
-    if (req.query.archived) {
+    if (req.query.archived && req.query.archived == 'true') {
         queryObject.where.isArchived = true;
         queryObject.where.isDeleted = false;
         queryObject.where.owner = req.user.username;
