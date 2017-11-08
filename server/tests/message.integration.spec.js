@@ -28,6 +28,7 @@ const testMessageObject = {
 
 const testMessageArray = [];
 const fromArray = ['user0','user1','user2','user3'];
+const MessageUnscoped = Message.unscoped();
 // 4 senders send message to 4 recipients each
 fromArray.forEach(function(receiver) {
   fromArray.forEach(function(sender) {
@@ -474,11 +475,12 @@ describe('Message API:', function () {
                 .expect(httpStatus.OK)
                 .then(res => {
                     let id = res.body.id;
-                    Message.unscoped().findById(id)
-                        .then(message => {
-                            expect(message.isDeleted).to.equal(true);
-                            done();
-                        });
+                    MessageUnscoped
+                    .findById(id)
+                    .then(message => {
+                        expect(message.isDeleted).to.equal(true);
+                        done();
+                    });
                 })
                 .catch(done);
         });
@@ -529,12 +531,12 @@ describe('Message API:', function () {
                 .expect(httpStatus.OK)
                 .then(res => {
                     let id = res.body.id;
-                    Message.unscoped()
-                           .findById(id)
-                           .then(message => {
-                             expect(message.isArchived).to.equal(true);
-                             done();
-                          });
+                    MessageUnscoped
+                    .findById(id)
+                    .then(message => {
+                      expect(message.isArchived).to.equal(true);
+                      done();
+                    });
                 })
                 .catch(done);
         });
