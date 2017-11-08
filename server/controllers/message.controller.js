@@ -5,6 +5,7 @@ const Message = db.Message;
 
 /**
  * Load message and append to req.
+ * Message cannot be deleted or archived.
  */
 function load(req, res, next, id) {
     Message.scope({ method: ['forUser', req.user] })
@@ -85,7 +86,7 @@ function send(req, res, next) {
 // a message sent by that user, since he is the 'owner' in both cases.
 // This needs integration with auth microservice
 // Query paramters: 'from', 'summary', 'limit'
-//To return archived messages use url param archived=true
+// To return archived messages use url param archived=true
 function list(req, res) {
     const queryObject = {
         where: {},
@@ -105,7 +106,7 @@ function list(req, res) {
         queryObject.attributes = ['subject', 'from', 'createdAt'];
     }
 
-    if (req.query.archived && req.query.archived == 'true') {
+    if (req.query.archived && req.query.archived === 'true') {
         queryObject.where.isArchived = true;
         queryObject.where.isDeleted = false;
         queryObject.where.owner = req.user.username;

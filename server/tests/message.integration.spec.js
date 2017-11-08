@@ -471,11 +471,11 @@ describe('Message API:', function () {
                 .then(res => {
                     let id = res.body.id;
                     MessageUnscoped
-                    .findById(id)
-                    .then(message => {
-                        expect(message.isDeleted).to.equal(true);
-                        done();
-                    });
+                        .findById(id)
+                        .then(message => {
+                            expect(message.isDeleted).to.equal(true);
+                            done();
+                        });
                 })
                 .catch(done);
         });
@@ -527,11 +527,11 @@ describe('Message API:', function () {
                 .then(res => {
                     let id = res.body.id;
                     MessageUnscoped
-                    .findById(id)
-                    .then(message => {
-                      expect(message.isArchived).to.equal(true);
-                      done();
-                    });
+                        .findById(id)
+                        .then(message => {
+                            expect(message.isArchived).to.equal(true);
+                            done();
+                        });
                 })
                 .catch(done);
         });
