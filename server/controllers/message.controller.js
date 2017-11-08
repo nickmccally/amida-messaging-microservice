@@ -45,6 +45,7 @@ function get(req, res) {
 function send(req, res, next) {
     // Each iteration saves the recipient's name from the to[] array as the owner to the db.
     const messageArray = [];
+    const newTime = new Date();
 
     // Saves separate instance where each recipient is the owner
     for (let i = 0; i < req.body.to.length; i += 1) {
@@ -54,7 +55,7 @@ function send(req, res, next) {
             subject: req.body.subject,
             message: req.body.message,
             owner: req.body.to[i],
-            created: new Date(),
+            createdAt: new Date(),
             isDeleted: false,
         });
     }
@@ -68,8 +69,8 @@ function send(req, res, next) {
         subject: req.body.subject,
         message: req.body.message,
         owner: req.body.from,
-        created: new Date(),
-        readAt: new Date(),
+        createdAt: newTime,
+        readAt: newTime,
         isDeleted: false,
     });
 
