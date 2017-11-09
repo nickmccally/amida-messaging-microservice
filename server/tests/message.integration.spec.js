@@ -182,8 +182,11 @@ describe('Message API:', function () {
 
         let messageId;
         
-        before(() => Message
-            .create(testMessageObject)
+        before(() => request(app)
+            .post(`${baseURL}/message/send`)
+            .set('Authorization', `Bearer ${auth}`)
+            .send(testMessageObject)
+            .expect(httpStatus.OK)
             .then((message) => {
                 messageId = message.id;
                 return;
@@ -191,14 +194,14 @@ describe('Message API:', function () {
         );
 
         it('should return OK', () => request(app)
-            .post(`${baseUrl}/message/reply/${messageId}`)
+            .post(`${baseURL}/message/reply/${messageId}`)
             .set('Authorization', `Bearer ${auth2}`)
             .send(goodReplyMessageObject)
             .expect(httpStatus.OK)
         );
 
         it('should return the response message owned by the sender', () => request(app)
-            .post(`${baseUrl}/message/reply/${messageId}`)
+            .post(`${baseURL}/message/reply/${messageId}`)
             .set('Authorization', `Bearer ${auth2}`)
             .send(goodReplyMessageObject)
             .expect(httpStatus.OK)
@@ -214,7 +217,7 @@ describe('Message API:', function () {
         );
 
         it('should create new messages in the DB with appropriate threaded message IDs', () => request(app)
-            .post(`${baseUrl}/message/reply/${messageId}`)
+            .post(`${baseURL}/message/reply/${messageId}`)
             .set('Authorization', `Bearer ${auth2}`)
             .send(goodReplyMessageObject)
             .expect(httpStatus.OK)
@@ -249,28 +252,28 @@ describe('Message API:', function () {
         );
 
         it('should return an error if the messageId does not exist', () => request(app)
-            .post(`${baseUrl}/message/reply/99999`)
+            .post(`${baseURL}/message/reply/99999`)
             .set('Authorization', `Bearer ${auth2}`)
             .send(goodReplyMessageObject)
             .expect(httpStatus.NOT_FOUND)
         );
 
         xit('should not allow a reply if the sender was not a recipient of the message specified', () => request(app)
-            .post(`${baseUrl}/message/reply/${messageId}`)
+            .post(`${baseURL}/message/reply/${messageId}`)
             .set('Authorization', `Bearer ${auth2}`)
             .send(badReplyMessageObject)
             .expect(httpStatus.FORBIDDEN)
         );
 
         it('should maintain original ID while incrementing parent ID on multiple replies', () => request(app)
-            .post(`${baseUrl}/message/reply/${messageId}`)
+            .post(`${baseURL}/message/reply/${messageId}`)
             .set('Authorization', `Bearer ${auth2}`)
             .send(goodReplyMessageObject)
             .expect(httpStatus.OK)
             .then((res1) => {
                 let replyId = res.body.id;
                 return request(app)
-                    .post(`${baseUrl}/message/reply/${replyId}`)
+                    .post(`${baseURL}/message/reply/${replyId}`)
                     .set('Authorization', `Bearer ${auth1}`)
                     .send(secondReplyMessageObject)
                     .expect(httpStatus.OK)

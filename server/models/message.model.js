@@ -4,6 +4,16 @@
  * Message Schema
  */
 module.exports = (sequelize, DataTypes) => {
+    const hooks = {
+        afterCreate(message) {
+            // make sure root messages have originalMessageId set
+            if (message.originalMessageId === undefined) {
+                return message.update({ originalMessageId: message.id });
+            }
+            return null;
+        },
+    };
+
     const Message = sequelize.define('Message', {
         id: {
             type: DataTypes.INTEGER,
@@ -63,27 +73,27 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             defaultValue: false,
         },
-    },
-        {
-            defaultScope: {
-                where: {
-                    isDeleted: false,
-                    isArchived: false,
-                },
+    }, {
+        hooks,
+    }, {
+        defaultScope: {
+            where: {
+                isDeleted: false,
+                isArchived: false,
             },
-            scopes: {
-                forUser(user) {
-                    return {
-                        where: {
-                            owner: user.username,
-                            isDeleted: false,
-                            isArchived: false,
-                        },
-                    };
-                },
+        },
+        scopes: {
+            forUser(user) {
+                return {
+                    where: {
+                        owner: user.username,
+                        isDeleted: false,
+                        isArchived: false,
+                    },
+                };
             },
-        }
-    );
+        },
+    });
 
     // Class methods
 

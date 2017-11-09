@@ -1,5 +1,6 @@
 import httpStatus from 'http-status';
 import db from '../../config/sequelize';
+import APIError from '../helpers/APIError';
 
 const Message = db.Message;
 
@@ -8,13 +9,13 @@ const Message = db.Message;
  * Message cannot be deleted or archived.
  */
 function load(req, res, next, id) {
+    console.log(req.user);
     Message.scope({ method: ['forUser', req.user] })
         .findById(id)
         .then((message) => {
             if (!message) {
-                const e = new Error('Message does not exist');
-                e.status = httpStatus.NOT_FOUND;
-                return next(e);
+                const err = new APIError('Message does not exist', httpStatus.NOT_FOUND, true);
+                return next(err);
             }
             req.message = message; // eslint-disable-line no-param-reassign
             return next();
@@ -78,6 +79,67 @@ function send(req, res, next) {
     // once the bulkCreate and create promises resolve, send the sender's saved message or an error
     Promise
         .join(bulkCreate, messageCreate, (bulkResult, messageResult) => res.json(messageResult))
+        .catch(e => next(e));
+}
+
+/**
+ * Reply to a message.
+ * @property {Array} req.body.to - Array of user IDs to send the message to.
+ * @property {string} req.body.from - The user ID of the sender
+ * @property {string} req.body.subject - Subject line of the message
+ * @property {string} req.body.message - Body of the message
+ * @property {Number} req.params.messageId - DB ID of the message being replied to
+ * @returns {Message}
+ */
+function reply(req, res, next) {
+    const messageId = req.params.messageId;
+    const parentMessage = req.message;
+
+    // Make sure that the person replying was in the "to" of that message
+    if (!parentMessage.to.includes(req.user)) {
+        const err = new APIError('Cannot reply to a message not sent to you!', httpStatus.FORBIDDEN, true);
+        return next(err);
+    }
+    // Then, generate messages a la send()
+    // Each iteration saves the recipient's name from the to[] array as the owner to the db.
+    const messageArray = [];
+    const newTime = new Date();
+
+    // Saves separate instance where each recipient is the owner
+    for (let i = 0; i < req.body.to.length; i += 1) {
+        messageArray.push({
+            to: req.body.to,
+            from: req.body.from,
+            subject: req.body.subject,
+            message: req.body.message,
+            owner: req.body.to[i],
+            createdAt: newTime,
+            isDeleted: false,
+            parentMessageId: messageId,
+            originalMessageId: parentMessage.originalMessageId,
+        });
+    }
+
+    const bulkCreate = Message.bulkCreate(messageArray);
+
+    // Saves an instance where the sender is owner and readAt=current time
+    const messageCreate = Message.create({
+        to: req.body.to,
+        from: req.body.from,
+        subject: req.body.subject,
+        message: req.body.message,
+        owner: req.body.from,
+        createdAt: newTime,
+        readAt: newTime,
+        isDeleted: false,
+        parentMessageId: messageId,
+        originalMessageId: parentMessage.originalMessageId,
+    });
+
+    // once the bulkCreate and create promises resolve,
+    // send the sender's saved message or an error
+    Promise
+        .join(bulkCreate, messageCreate, (bulkRes, messageRes) => res.json(messageRes))
         .catch(e => next(e));
 }
 
@@ -149,4 +211,4 @@ function archive(req, res) {
     return res.send(req.message);
 }
 
-export default { send, get, list, count, remove, load, archive };
+export default { send, reply, get, list, count, remove, load, archive };

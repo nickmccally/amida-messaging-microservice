@@ -9,13 +9,13 @@ import httpStatus from 'http-status';
 import expressWinston from 'express-winston';
 import expressValidation from 'express-validation';
 import helmet from 'helmet';
+import passport from 'passport';
 import winstonInstance from './winston';
 import routes from '../server/routes/index.route';
 import config from './config';
 import APIError from '../server/helpers/APIError';
-import auth from './passport';
+import passportConfig from './passport';
 
-const passportAuth = auth();
 const app = express();
 
 if (config.env === 'development') {
@@ -48,7 +48,9 @@ if (config.env === 'development') {
     }));
 }
 
-app.use(passportAuth.initialize());
+// set up Passport middleware
+passportConfig(passport);
+app.use(passport.initialize());
 
 // mount all routes on /api path
 app.use('/api', routes);
