@@ -17,8 +17,8 @@ chai.use(require('chai-datetime'));
 const version = p.version.split('.').shift();
 const baseURL = (version > 0 ? `/api/v${version}` : '/api');
 const auth = config.testToken;
-const auth1 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiYWRtaW4iOnRydWV9.rAS0mEZDBMuooJix14yzJdO10IhriO3WJ_HbxD6qZqg';
 const auth2 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIyIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiYWRtaW4iOnRydWV9.IXN3UeBdUHLxVLHEk9a7IuY6DVQcnuA8ykxRR6JdC_k';
+const authBad = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXJCYWQiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJhZG1pbiI6dHJ1ZX0.Bht75P-tmchDXssNb58r8mzwe4rHpNZVNzYHQtzfp5k';
 
 const testMessageObject = {
     to: ['user1','user2'],
@@ -55,7 +55,7 @@ describe('Message API:', function () {
     describe('POST /message/send', function () {
 
         it('should return OK', () => request(app)
-            .post(baseURL + '/message/send')
+            .post(`${baseURL}/message/send`)
             .set('Authorization', `Bearer ${auth}`)
             .send(testMessageObject)
             .expect(httpStatus.OK)
@@ -174,8 +174,8 @@ describe('Message API:', function () {
         };
 
         const secondReplyMessageObject = {
-            to: ['user2','user0'],
-            from: 'user1',
+            to: ['user1','user0'],
+            from: 'user2',
             subject: 'RE: RE: Test Message',
             message: 'I have to keep sending replies',
         };
@@ -187,6 +187,7 @@ describe('Message API:', function () {
             .set('Authorization', `Bearer ${auth}`)
             .send(testMessageObject)
             .expect(httpStatus.OK)
+            .then(() => Message.scope({ method: ['forUser', {username: 'user2'}] }).findOne())
             .then((message) => {
                 messageId = message.id;
                 return;
@@ -258,36 +259,11 @@ describe('Message API:', function () {
             .expect(httpStatus.NOT_FOUND)
         );
 
-        xit('should not allow a reply if the sender was not a recipient of the message specified', () => request(app)
+        it('should not find the parent message if the sender was not a recipient of the message specified', () => request(app)
             .post(`${baseURL}/message/reply/${messageId}`)
-            .set('Authorization', `Bearer ${auth2}`)
+            .set('Authorization', `Bearer ${authBad}`)
             .send(badReplyMessageObject)
-            .expect(httpStatus.FORBIDDEN)
-        );
-
-        it('should maintain original ID while incrementing parent ID on multiple replies', () => request(app)
-            .post(`${baseURL}/message/reply/${messageId}`)
-            .set('Authorization', `Bearer ${auth2}`)
-            .send(goodReplyMessageObject)
-            .expect(httpStatus.OK)
-            .then((res1) => {
-                let replyId = res.body.id;
-                return request(app)
-                    .post(`${baseURL}/message/reply/${replyId}`)
-                    .set('Authorization', `Bearer ${auth1}`)
-                    .send(secondReplyMessageObject)
-                    .expect(httpStatus.OK)
-                    .then((res2) => {
-                        expect(res2.body.to).to.deep.equal(secondReplyMessageObject.to);
-                        expect(res2.body.from).to.equal(secondReplyMessageObject.from);
-                        expect(res2.body.owner).to.equal(secondReplyMessageObject.from);
-                        expect(res2.body.subject).to.equal(secondReplyMessageObject.subject);
-                        expect(res2.body.message).to.equal(secondReplyMessageObject.message);
-                        expect(res2.body.originalMessageId).to.equal(messageId);
-                        expect(res2.body.parentMessageId).to.equal(replyId);
-                        return;
-                    })
-            })
+            .expect(httpStatus.NOT_FOUND)
         );
 
     });

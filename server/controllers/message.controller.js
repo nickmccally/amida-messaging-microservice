@@ -9,7 +9,6 @@ const Message = db.Message;
  * Message cannot be deleted or archived.
  */
 function load(req, res, next, id) {
-    console.log(req.user);
     Message.scope({ method: ['forUser', req.user] })
         .findById(id)
         .then((message) => {
@@ -58,7 +57,6 @@ function send(req, res, next) {
             message: req.body.message,
             owner: req.body.to[i],
             createdAt: new Date(),
-            isDeleted: false,
         });
     }
 
@@ -73,7 +71,6 @@ function send(req, res, next) {
         owner: req.body.from,
         createdAt: newTime,
         readAt: newTime,
-        isDeleted: false,
     });
 
     // once the bulkCreate and create promises resolve, send the sender's saved message or an error
@@ -94,9 +91,8 @@ function send(req, res, next) {
 function reply(req, res, next) {
     const messageId = req.params.messageId;
     const parentMessage = req.message;
-
     // Make sure that the person replying was in the "to" of that message
-    if (!parentMessage.to.includes(req.user)) {
+    if (!parentMessage.to.includes(req.user.username)) {
         const err = new APIError('Cannot reply to a message not sent to you!', httpStatus.FORBIDDEN, true);
         return next(err);
     }

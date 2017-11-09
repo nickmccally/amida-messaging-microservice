@@ -1,5 +1,3 @@
-
-
 /**
  * Message Schema
  */
@@ -7,7 +5,8 @@ module.exports = (sequelize, DataTypes) => {
     const hooks = {
         afterCreate(message) {
             // make sure root messages have originalMessageId set
-            if (message.originalMessageId === undefined) {
+            if (message.originalMessageId === undefined
+             || message.originalMessageId === null) {
                 return message.update({ originalMessageId: message.id });
             }
             return null;
@@ -75,7 +74,6 @@ module.exports = (sequelize, DataTypes) => {
         },
     }, {
         hooks,
-    }, {
         defaultScope: {
             where: {
                 isDeleted: false,
