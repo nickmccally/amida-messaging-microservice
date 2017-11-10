@@ -2,17 +2,6 @@
  * Message Schema
  */
 module.exports = (sequelize, DataTypes) => {
-    const hooks = {
-        afterCreate(message) {
-            // make sure root messages have originalMessageId set
-            if (message.originalMessageId === undefined
-             || message.originalMessageId === null) {
-                return message.update({ originalMessageId: message.id });
-            }
-            return null;
-        },
-    };
-
     const Message = sequelize.define('Message', {
         id: {
             type: DataTypes.INTEGER,

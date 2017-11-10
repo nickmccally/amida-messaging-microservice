@@ -20,7 +20,7 @@ router.route('/reply/:messageId')
  * - from: filter on message sender by username
  * - summary: boolean, can return a summary version of messages
  */
-router.route('/list/')
+router.route('/list')
     .get(messageCtrl.list);
 
 /**
