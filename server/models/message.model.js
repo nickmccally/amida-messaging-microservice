@@ -73,7 +73,6 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: false,
         },
     }, {
-        hooks,
         defaultScope: {
             where: {
                 isDeleted: false,

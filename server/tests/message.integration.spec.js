@@ -181,13 +181,18 @@ describe('Message API:', function () {
         };
 
         let messageId;
+        let originalMessageId;
         
         before(() => request(app)
             .post(`${baseURL}/message/send`)
             .set('Authorization', `Bearer ${auth}`)
             .send(testMessageObject)
             .expect(httpStatus.OK)
-            .then(() => Message.scope({ method: ['forUser', {username: 'user2'}] }).findOne())
+            .then((origMsg) => {
+                originalMessageId = origMsg.body.originalMessageId;
+                return Message.scope({ method: ['forUser', {username: 'user2'}] })
+                              .findOne({where: {originalMessageId}});
+            })
             .then((message) => {
                 messageId = message.id;
                 return;
@@ -212,7 +217,7 @@ describe('Message API:', function () {
                 expect(res.body.owner).to.equal(goodReplyMessageObject.from);
                 expect(res.body.subject).to.equal(goodReplyMessageObject.subject);
                 expect(res.body.message).to.equal(goodReplyMessageObject.message);
-                expect(res.body.originalMessageId).to.equal(messageId);
+                expect(res.body.originalMessageId).to.equal(originalMessageId);
                 expect(res.body.parentMessageId).to.equal(messageId);
             })
         );

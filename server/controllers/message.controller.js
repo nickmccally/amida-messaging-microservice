@@ -48,22 +48,8 @@ function send(req, res, next) {
     const messageArray = [];
     const newTime = new Date();
 
-    // Saves separate instance where each recipient is the owner
-    for (let i = 0; i < req.body.to.length; i += 1) {
-        messageArray.push({
-            to: req.body.to,
-            from: req.body.from,
-            subject: req.body.subject,
-            message: req.body.message,
-            owner: req.body.to[i],
-            createdAt: new Date(),
-        });
-    }
-
-    const bulkCreate = Message.bulkCreate(messageArray);
-
     // Saves an instance where the sender is owner and readAt=current time
-    const messageCreate = Message.create({
+    Message.create({
         to: req.body.to,
         from: req.body.from,
         subject: req.body.subject,
@@ -71,12 +57,24 @@ function send(req, res, next) {
         owner: req.body.from,
         createdAt: newTime,
         readAt: newTime,
-    });
-
-    // once the bulkCreate and create promises resolve, send the sender's saved message or an error
-    Promise
-        .join(bulkCreate, messageCreate, (bulkResult, messageResult) => res.json(messageResult))
-        .catch(e => next(e));
+    }).then(msg => msg.update({ originalMessageId: msg.id }))
+      .then((msg) => {
+        // Saves separate instance where each recipient is the owner
+          for (let i = 0; i < req.body.to.length; i += 1) {
+              messageArray.push({
+                  to: req.body.to,
+                  from: req.body.from,
+                  subject: req.body.subject,
+                  message: req.body.message,
+                  owner: req.body.to[i],
+                  createdAt: new Date(),
+                  originalMessageId: msg.id,
+              });
+          }
+          Message.bulkCreate(messageArray)
+            .then(() => res.json(msg))
+            .catch(e => next(e));
+      }).catch(e => next(e));
 }
 
 /**
@@ -134,7 +132,7 @@ function reply(req, res, next) {
 
     // once the bulkCreate and create promises resolve,
     // send the sender's saved message or an error
-    Promise
+    return Promise
         .join(bulkCreate, messageCreate, (bulkRes, messageRes) => res.json(messageRes))
         .catch(e => next(e));
 }
