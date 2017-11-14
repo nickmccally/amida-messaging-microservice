@@ -1,24 +1,30 @@
 
-const passport = require('passport');
-const config = require('./config');
-const JwtStrategy = require('passport-jwt').Strategy;
-const ExtractJwt = require('passport-jwt').ExtractJwt;
+import {
+    Strategy as JwtStrategy,
+    ExtractJwt,
+} from 'passport-jwt';
+import config from './config';
 
-const jwtOptions = {
+const opts = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: config.jwtSecret,
-    passReqToCallback: true,
+    // passReqToCallback: true,
 };
 
-module.exports = () => {
-    const jwtLogin = new JwtStrategy(jwtOptions, (req, payload, done) => {
-        done(null, payload);
-    });
-    passport.use(jwtLogin);
-    return {
-        initialize() {
-            return passport.initialize();
-        },
-        authenticate: passport.authenticate('jwt', { session: false }),
-    };
+module.exports = (passport) => {
+    passport.use(new JwtStrategy(opts, (jwtPayload, done) => done(null, jwtPayload)));
 };
+
+// module.exports = () => {
+//     const jwtLogin = new JwtStrategy(jwtOptions, (req, payload, done) => {
+//         console.log(payload);
+//         done(null, payload);
+//     });
+//     passport.use(jwtLogin);
+//     return {
+//         initialize() {
+//             return passport.initialize();
+//         },
+//         authenticate: passport.authenticate('jwt', { session: false }),
+//     };
+// };

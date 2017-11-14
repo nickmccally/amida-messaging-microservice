@@ -1,3 +1,4 @@
+
 /* eslint-disable */
 
 import request from 'supertest-as-promised';
@@ -5,12 +6,11 @@ import httpStatus from 'http-status';
 import chai, { expect } from 'chai';
 import app from '../../index';
 import p from '../../package';
+import config from '../../config/config'
 import {
     Message,
     sequelize
 } from '../../config/sequelize';
-import config from '../../config/config'
-import _ from 'lodash';
 
 chai.use(require('chai-datetime'));
 chai.use(require('chai-date-string'));
@@ -18,6 +18,8 @@ chai.use(require('chai-date-string'));
 const version = p.version.split('.').shift();
 const baseURL = (version > 0 ? `/api/v${version}` : '/api');
 const auth = config.testToken;
+const auth2 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIyIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiYWRtaW4iOnRydWV9.IXN3UeBdUHLxVLHEk9a7IuY6DVQcnuA8ykxRR6JdC_k';
+const authBad = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXJCYWQiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJhZG1pbiI6dHJ1ZX0.Bht75P-tmchDXssNb58r8mzwe4rHpNZVNzYHQtzfp5k';
 
 const testMessageObject = {
     to: ['user1','user2'],
@@ -40,12 +42,12 @@ fromArray.forEach(function(receiver) {
         owner: receiver
     })
   })
-})
+});
 
 describe('Message API:', function () {
 
     before(() => Message.sync({force: true}));
-
+    
     after(() => Message.destroy({
         where: {},
         truncate: true
@@ -54,12 +56,12 @@ describe('Message API:', function () {
     describe('POST /message/send', function () {
 
         it('should return OK', () => request(app)
-            .post(baseURL + '/message/send')
+            .post(`${baseURL}/message/send`)
             .set('Authorization', `Bearer ${auth}`)
             .send(testMessageObject)
             .expect(httpStatus.OK)
         );
-
+        
         /**
          * Every recipient, plus the sender, gets their own version
          * of the message with the `owner` field set to their user ID.
@@ -98,9 +100,9 @@ describe('Message API:', function () {
                                 expect(message.from).to.equal(testMessageObject.from);
                                 expect(message.subject).to.equal(testMessageObject.subject);
                                 expect(message.message).to.equal(testMessageObject.message);
-                                done();
+                                done();         
                             });
-                        });
+                        });                
                 })
                 .catch(done);
         });
@@ -128,7 +130,7 @@ describe('Message API:', function () {
                 .then(res => {
                     Message.findOne({where: {owner: testMessageObject.to[0]}})
                             .then(message => {
-                                expect(message.readAt).to.be.null;
+                                expect(message.readAt).to.be.null;   
                             });
                     done();
                 })
@@ -156,36 +158,121 @@ describe('Message API:', function () {
         });
     });
 
-    // describe('POST /message/reply/:messageId', () => {
+    describe('POST /message/reply/:messageId', () => {
 
-    //     let messageId;
+        const goodReplyMessageObject = {
+            to: ['user1','user0'],
+            from: 'user2',
+            subject: 'RE: Test Message',
+            message: 'Test reply please ignore',
+        };
 
-    //     before(done => {
-    //         Message.create(testMessageObject)
-    //             .then(message => {
-    //                 messageId = message.id;
-    //                 done();
-    //             });
-    //     });
+        const badReplyMessageObject = {
+            to: ['user1','user0'],
+            from: 'userBad',
+            subject: 'RE: Test Message',
+            message: 'Bad reply please ignore',
+        };
 
-    //     it('should return OK', done => {
-    //         request(app)
-    //             .post(baseURL + '/message/send')
-    //             .send(testMessageObject)
-    //             .expect(httpStatus.OK)
-    //             .then(res => {
-    //                 expect(res.text).to.equal('OK');
-    //                 done();
-    //             })
-    //             .catch(done);
-    //     });
+        const secondReplyMessageObject = {
+            to: ['user1','user0'],
+            from: 'user2',
+            subject: 'RE: RE: Test Message',
+            message: 'I have to keep sending replies',
+        };
 
-    //     // TODO leaving these for Jacob to work on
-    //     it('should return the response message owned by the sender');
+        let messageId;
+        let originalMessageId;
+        
+        before(() => request(app)
+            .post(`${baseURL}/message/send`)
+            .set('Authorization', `Bearer ${auth}`)
+            .send(testMessageObject)
+            .expect(httpStatus.OK)
+            .then((origMsg) => {
+                originalMessageId = origMsg.body.originalMessageId;
+                return Message.scope({ method: ['forUser', {username: 'user2'}] })
+                              .findOne({where: {originalMessageId}});
+            })
+            .then((message) => {
+                messageId = message.id;
+                return;
+            })
+        );
 
-    //     it('should create new messages in the DB with appropriate threaded message IDs');
+        it('should return OK', () => request(app)
+            .post(`${baseURL}/message/reply/${messageId}`)
+            .set('Authorization', `Bearer ${auth2}`)
+            .send(goodReplyMessageObject)
+            .expect(httpStatus.OK)
+        );
 
-    // });
+        it('should return the response message owned by the sender', () => request(app)
+            .post(`${baseURL}/message/reply/${messageId}`)
+            .set('Authorization', `Bearer ${auth2}`)
+            .send(goodReplyMessageObject)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body.to).to.deep.equal(goodReplyMessageObject.to);
+                expect(res.body.from).to.equal(goodReplyMessageObject.from);
+                expect(res.body.owner).to.equal(goodReplyMessageObject.from);
+                expect(res.body.subject).to.equal(goodReplyMessageObject.subject);
+                expect(res.body.message).to.equal(goodReplyMessageObject.message);
+                expect(res.body.originalMessageId).to.equal(originalMessageId);
+                expect(res.body.parentMessageId).to.equal(messageId);
+            })
+        );
+
+        it('should create new messages in the DB with appropriate threaded message IDs', () => request(app)
+            .post(`${baseURL}/message/reply/${messageId}`)
+            .set('Authorization', `Bearer ${auth2}`)
+            .send(goodReplyMessageObject)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                // Message 1: owned by respondent (user2)
+                const m1 = Message.findOne({where: {
+                    owner: goodReplyMessageObject.from,
+                    parentMessageId: messageId
+                }});
+
+                // Message 2: owned by user0
+                const m2 = Message.findOne({where: {
+                    owner: goodReplyMessageObject.to[0],
+                    parentMessageId: messageId
+                }});
+
+                // Message 3: owned by user1
+                const m3 = Message.findOne({where: {
+                    owner: goodReplyMessageObject.to[1],
+                    parentMessageId: messageId
+                }});
+
+                return Promise.join(m1, m2, m3, (res1, res2, res3) => {
+                    expect(res1.originalMessageId).to.equal(originalMessageId);
+                    expect(res1.message).to.equal(goodReplyMessageObject.message);
+                    expect(res2.originalMessageId).to.equal(originalMessageId);
+                    expect(res2.message).to.equal(goodReplyMessageObject.message);
+                    expect(res3.originalMessageId).to.equal(originalMessageId);
+                    expect(res3.message).to.equal(goodReplyMessageObject.message);
+                });
+            })
+        );
+
+        it('should return an error if the messageId does not exist', () => request(app)
+            .post(`${baseURL}/message/reply/99999`)
+            .set('Authorization', `Bearer ${auth2}`)
+            .send(goodReplyMessageObject)
+            .expect(httpStatus.NOT_FOUND)
+        );
+
+        it('should not find the parent message if the sender was not a recipient of the message specified', () => request(app)
+            .post(`${baseURL}/message/reply/${messageId}`)
+            .set('Authorization', `Bearer ${authBad}`)
+            .send(badReplyMessageObject)
+            .expect(httpStatus.NOT_FOUND)
+        );
+
+    });
 
     //parameters: from, summary, limit
     describe('GET /message/list', function () {
@@ -269,7 +356,7 @@ describe('Message API:', function () {
         );
 
     });
-
+    
     // describe('GET /message/count/:userId', function () {
 
     //     let userId;
@@ -321,77 +408,60 @@ describe('Message API:', function () {
     //     });
 
     // });
-
+    
     describe('GET /message/get/:messageId', function () {
+
         let messageId;
-
-        before(done => {
-            testMessageObject.owner = "user0"; //forcing owner to be a specific value
-            Message.create(testMessageObject)
-                .then(message => {
-                    messageId = message.id;
-                    done();
-                });
-        });
-
-        after(done => {
-            Message.destroy({
-                where: {},
-                truncate: true
-            }).then(() => done())
-        });
-
-        it('should return OK', () => request(app)
-            .get(baseURL + '/message/get/' + messageId)
+        
+        before(() => request(app)
+            .post(`${baseURL}/message/send`)
             .set('Authorization', `Bearer ${auth}`)
+            .send(testMessageObject)
             .expect(httpStatus.OK)
-        );
-
-        it('should return the specified Message', () => request(app)
-            .get(baseURL + '/message/get/' + messageId)
-            .set('Authorization', `Bearer ${auth}`)
-            .expect(httpStatus.OK)
-            .then(res => {
-                expect(res.body.to).to.deep.equal(testMessageObject.to);
-                expect(res.body.from).to.equal(testMessageObject.from);
-                expect(res.body.subject).to.equal(testMessageObject.subject);
-                expect(res.body.message).to.equal(testMessageObject.message);
-                //not checking for owner here because that value was forced to a string
+            .then((message) => {
+                messageId = message.body.id;
                 return;
             })
         );
 
-        it('should mark the Message retrieved as read', () => request(app)
-            .get(baseURL + '/message/get/' + messageId)
+        it('should return OK', () => request(app)
+            .get(`${baseURL}/message/get/${messageId}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then(res => {
-                expect(res.body.readAt).to.not.be.null;
-                expect(res.body.readAt).to.be.a.dateString();
-            })
         );
 
-        it('should not change the readAt timestamp on multiple get requests', () => request(app)
-            .get(baseURL + '/message/get/' + messageId)
-            .set('Authorization', `Bearer ${auth}`)
-            .expect(httpStatus.OK)
-            .then((res1) => {
-                let firstTimestamp = res1.body.readAt;
-                return request(app)
-                    .get(baseURL + '/message/get/' + messageId)
-                    .set('Authorization', `Bearer ${auth}`)
-                    .expect(httpStatus.OK)
-                    .then((res2) => expect(res2.body.readAt).to.equal(firstTimestamp))
-            })
-        );
+        it('should return the specified Message', done => {
+            request(app)
+                .get(`${baseURL}/message/get/${messageId}`)
+                .set('Authorization', `Bearer ${auth}`)
+                .expect(httpStatus.OK)
+                .then(res => {
+                    expect(res.body).to.deep.include(testMessageObject);
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should mark the Message retrieved as read', done => {
+            request(app)
+                .get(`${baseURL}/message/get/${messageId}`)
+                .set('Authorization', `Bearer ${auth}`)
+                .expect(httpStatus.OK)
+                .then(res => {
+                    expect(res.body.readAt).to.not.be.null;
+                    expect(res.body.readAt).to.be.a.dateString();
+                    done();
+                })
+                .catch(done);
+        });
 
     });
 
     // TODO: this one is going to be hard
     // describe('GET /message/thread/:originalMessageId', () => {
-
+        
     //     let messageId;
-
+        
     //     before(done => {
     //         Message.create(testMessageObject)
     //             .then(message => {
@@ -430,26 +500,27 @@ describe('Message API:', function () {
     describe('DELETE /message/delete/:messageId', function () {
 
         let messageId;
-
-        beforeEach(done => {
-            Message.destroy({
+        
+        beforeEach(() => Message
+            .destroy({
                 where: {},
                 truncate: true
-            }).then(() => {
-                Message.create(testMessageObject)
-                    .then(message => {
-                        messageId = message.id;
-                        done();
-                    });
-            });
-        });
+            }).then(() => request(app)
+                .post(`${baseURL}/message/send`)
+                .set('Authorization', `Bearer ${auth}`)
+                .send(testMessageObject)
+                .expect(httpStatus.OK)
+                .then((message) => {
+                    messageId = message.body.id;
+                    return;
+                }))
+        );
 
-        it('should return OK', () => {
-            request(app)
-                .get(baseURL + '/message/delete/' + messageId)
+        it('should return OK', () => request(app)
+                .delete(baseURL + '/message/delete/' + messageId)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
-        });
+        );
 
         it('should return the deleted Message', done => {
             request(app)
@@ -463,17 +534,16 @@ describe('Message API:', function () {
                 .catch(done);
         });
 
-        it('should soft delete message', done => {
+        it('should delete the message from the DB', done => {
             request(app)
                 .delete(baseURL + '/message/delete/' + messageId)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => {
                     let id = res.body.id;
-                    MessageUnscoped
-                        .findById(id)
+                    Message.findById(id)
                         .then(message => {
-                            expect(message.isDeleted).to.equal(true);
+                            expect(message).to.be.null;
                             done();
                         });
                 })
@@ -481,61 +551,5 @@ describe('Message API:', function () {
         });
 
     });
-
-
-    describe('PUT /message/archive/:messageId', function () {
-
-        let messageId;
-
-        beforeEach(done => {
-            Message.destroy({
-                where: {},
-                truncate: true
-            }).then(() => {
-                Message.create(testMessageObject)
-                    .then(message => {
-                        messageId = message.id;
-                        done();
-                    });
-            });
-        });
-
-        it('should return OK', () => {
-            request(app)
-                .get(baseURL + '/message/archive/' + messageId)
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-        });
-
-        it('should return the archived Message', done => {
-            request(app)
-                .put(baseURL + '/message/archive/' + messageId)
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.body).to.deep.include(testMessageObject);
-                    done();
-                })
-                .catch(done);
-        });
-
-        it('should archive message', done => {
-            request(app)
-                .put(baseURL + '/message/archive/' + messageId)
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-                .then(res => {
-                    let id = res.body.id;
-                    MessageUnscoped
-                        .findById(id)
-                        .then(message => {
-                            expect(message.isArchived).to.equal(true);
-                            done();
-                        });
-                })
-                .catch(done);
-        });
-
-    });
-
+    
 });

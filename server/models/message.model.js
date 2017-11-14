@@ -1,5 +1,3 @@
-
-
 /**
  * Message Schema
  */
@@ -63,27 +61,25 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             defaultValue: false,
         },
-    },
-        {
-            defaultScope: {
-                where: {
-                    isDeleted: false,
-                    isArchived: false,
-                },
+    }, {
+        defaultScope: {
+            where: {
+                isDeleted: false,
+                isArchived: false,
             },
-            scopes: {
-                forUser(user) {
-                    return {
-                        where: {
-                            owner: user.username,
-                            isDeleted: false,
-                            isArchived: false,
-                        },
-                    };
-                },
+        },
+        scopes: {
+            forUser(user) {
+                return {
+                    where: {
+                        owner: user.username,
+                        isDeleted: false,
+                        isArchived: false,
+                    },
+                };
             },
-        }
-    );
+        },
+    });
 
     // Class methods
 
