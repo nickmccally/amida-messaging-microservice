@@ -7,11 +7,13 @@ filebeat.prospectors:
 # Below are the prospector specific configurations.
 
 - input_type: log
+  close_inactive: 60m
   document_type: nginx
   paths:
     - /var/log/nginx/*.log
 
 - input_type: log
+  close_inactive: 60m
   document_type: syslog
   paths:
     - /var/log/messages
