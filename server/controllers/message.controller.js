@@ -5,11 +5,22 @@ import APIError from '../helpers/APIError';
 const Message = db.Message;
 
 /**
+ * Used to load appropriate scope per request.
+ */
+const MessageScope = function(req) {
+  if (req.originalUrl.includes('/unarchive/')) {
+    return Message.scope({ method: ['findAllForUser', req.user] });
+  } else {
+    return Message.scope({ method: ['forUser', req.user] });
+  }
+}
+
+/**
  * Load message and append to req.
  * Message cannot be deleted or archived.
  */
 function load(req, res, next, id) {
-    Message.scope({ method: ['forUser', req.user] })
+    MessageScope(req)
         .findById(id)
         .then((message) => {
             if (!message) {
@@ -205,4 +216,18 @@ function archive(req, res) {
     return res.send(req.message);
 }
 
-export default { send, reply, get, list, count, remove, load, archive };
+/**
+ * Unarchive
+ * sets isArchived of message with the userID to false
+ * @returns {Message}
+ */
+function unarchive(req, res) {
+    if (req.message) {
+        req.message.update({
+            isArchived: false,
+        });
+    }
+    return res.send(req.message);
+}
+
+export default { send, reply, get, list, count, remove, load, archive, unarchive };
