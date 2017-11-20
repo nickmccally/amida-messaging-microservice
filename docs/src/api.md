@@ -10,7 +10,7 @@ All API endpoints must be prefixed with the api keyword: for example,
   Authorization: Bearer <auth_token>
 ```
 
-Users of the messaging service must be registered on an instance of the Amida Auth Microservice. The required `auth_token` is obtained by authenticating against the Auth Microservice.
+Users of the messaging service must be registered on an instance of the [Amida Auth Microservice](https://github.com/amida-tech/amida-auth-microservice). The required `auth_token` is obtained by authenticating against the Auth Microservice.
 
 The request body should be sent `x-www-form-urlencoded`.
 
