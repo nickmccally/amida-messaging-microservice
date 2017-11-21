@@ -7,20 +7,20 @@ const Message = db.Message;
 /**
  * Used to load appropriate scope per request.
  */
-const MessageScope = function(req) {
+const messageScope = function(req) {
   if (req.originalUrl.includes('/unarchive/')) {
     return Message.scope({ method: ['findAllForUser', req.user] });
   } else {
     return Message.scope({ method: ['forUser', req.user] });
   }
-}
+};
 
 /**
  * Load message and append to req.
  * Message cannot be deleted or archived.
  */
 function load(req, res, next, id) {
-    MessageScope(req)
+    messageScope(req)
         .findById(id)
         .then((message) => {
             if (!message) {
