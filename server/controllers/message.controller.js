@@ -34,6 +34,18 @@ function load(req, res, next, id) {
 }
 
 /**
+ * Checks that the user authenticated with JWT is in the `from`
+ * field of the message (for send or reply).
+ */
+function checkFromUser(req, res, next) {
+    if (req.user.username !== req.body.from) {
+        const err = new APIError('Authenticated user must match `from` field in message', httpStatus.FORBIDDEN, true);
+        return next(err);
+    }
+    return next();
+}
+
+/**
  * Get message
  * @returns {Message}
  */
@@ -230,4 +242,4 @@ function unarchive(req, res) {
     return res.send(req.message);
 }
 
-export default { send, reply, get, list, count, remove, load, archive, unarchive };
+export default { send, reply, get, list, count, remove, load, archive, unarchive, checkFromUser };
