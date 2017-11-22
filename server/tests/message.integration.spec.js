@@ -47,7 +47,7 @@ fromArray.forEach(function(receiver) {
 describe('Message API:', function () {
 
     before(() => Message.sync({force: true}));
-    
+
     after(() => Message.destroy({
         where: {},
         truncate: true
@@ -61,7 +61,7 @@ describe('Message API:', function () {
             .send(testMessageObject)
             .expect(httpStatus.OK)
         );
-        
+
         /**
          * Every recipient, plus the sender, gets their own version
          * of the message with the `owner` field set to their user ID.
@@ -100,9 +100,9 @@ describe('Message API:', function () {
                                 expect(message.from).to.equal(testMessageObject.from);
                                 expect(message.subject).to.equal(testMessageObject.subject);
                                 expect(message.message).to.equal(testMessageObject.message);
-                                done();         
+                                done();
                             });
-                        });                
+                        });
                 })
                 .catch(done);
         });
@@ -130,7 +130,7 @@ describe('Message API:', function () {
                 .then(res => {
                     Message.findOne({where: {owner: testMessageObject.to[0]}})
                             .then(message => {
-                                expect(message.readAt).to.be.null;   
+                                expect(message.readAt).to.be.null;
                             });
                     done();
                 })
@@ -192,7 +192,7 @@ describe('Message API:', function () {
 
         let messageId;
         let originalMessageId;
-        
+
         before(() => request(app)
             .post(`${baseURL}/message/send`)
             .set('Authorization', `Bearer ${auth}`)
@@ -374,7 +374,7 @@ describe('Message API:', function () {
         );
 
     });
-    
+
     // describe('GET /message/count/:userId', function () {
 
     //     let userId;
@@ -426,11 +426,11 @@ describe('Message API:', function () {
     //     });
 
     // });
-    
+
     describe('GET /message/get/:messageId', function () {
 
         let messageId;
-        
+
         before(() => request(app)
             .post(`${baseURL}/message/send`)
             .set('Authorization', `Bearer ${auth}`)
@@ -477,9 +477,9 @@ describe('Message API:', function () {
 
     // TODO: this one is going to be hard
     // describe('GET /message/thread/:originalMessageId', () => {
-        
+
     //     let messageId;
-        
+
     //     before(done => {
     //         Message.create(testMessageObject)
     //             .then(message => {
@@ -518,7 +518,7 @@ describe('Message API:', function () {
     describe('DELETE /message/delete/:messageId', function () {
 
         let messageId;
-        
+
         beforeEach(() => Message
             .destroy({
                 where: {},
@@ -569,5 +569,66 @@ describe('Message API:', function () {
         });
 
     });
-    
+
+    describe('PUT /message/archive/:messageId', function () {
+        let messageId;
+
+        before(() => Message
+                      .destroy({
+                          where: {},
+                          truncate: true
+            }).then(() => request(app)
+                .post(`${baseURL}/message/send`)
+                .set('Authorization', `Bearer ${auth}`)
+                .send(testMessageObject)
+                .expect(httpStatus.OK)
+                .then((message) => {
+                    messageId = message.body.id;
+                    return;
+                }))
+        );
+
+        it('should archive and return message', done => {
+              request(app)
+                  .put(baseURL + '/message/archive/' + messageId)
+                  .set('Authorization', `Bearer ${auth}`)
+                  .expect(httpStatus.OK)
+                  .then(res => {
+                      expect(res.body).to.deep.include(testMessageObject);
+                      let id = res.body.id;
+                      MessageUnscoped
+                          .findById(id)
+                          .then(message => {
+                              expect(message.isArchived).to.equal(true);
+                              done();
+                          });
+                  })
+                  .catch(done);
+          });
+
+          it('should unarchive and return message', done => {
+                request(app)
+                    .put(baseURL + '/message/unarchive/' + messageId)
+                    .set('Authorization', `Bearer ${auth}`)
+                    .expect(httpStatus.OK)
+                    .then(res => {
+                        expect(res.body).to.deep.include(testMessageObject);
+                        let id = res.body.id;
+                        Message
+                            .findById(id)
+                            .then(message => {
+                                expect(message.isArchived).to.equal(false);
+                                done();
+                            });
+                    })
+                    .catch(done);
+            });
+
+        after(() => Message
+            .destroy({
+                where: {},
+                truncate: true
+            })
+        );
+    });
 });
