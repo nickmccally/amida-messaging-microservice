@@ -78,6 +78,13 @@ module.exports = (sequelize, DataTypes) => {
                     },
                 };
             },
+            findAllForUser(user) {
+                return {
+                    where: {
+                        owner: user.username,
+                    },
+                };
+            }
         },
     });
 
