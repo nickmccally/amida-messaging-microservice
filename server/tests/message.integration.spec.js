@@ -137,6 +137,15 @@ describe('Message API:', function () {
                 .catch(done);
         });
 
+        it('sender must match JWT user', () => {
+            let newTestMessageObject = { ...testMessageObject, from: 'fakeUser' };
+            return request(app)
+                .post(baseURL + '/message/send')
+                .set('Authorization', `Bearer ${auth}`)
+                .send(newTestMessageObject)
+                .expect(httpStatus.FORBIDDEN)
+        });
+
         /**
          * Sent messages are considered read
          */
@@ -257,6 +266,15 @@ describe('Message API:', function () {
                 });
             })
         );
+
+        it('sender must match JWT user', () => {
+            let newReplyMessageObject = { ...goodReplyMessageObject, from: 'fakeUser' };
+            return request(app)
+                .post(`${baseURL}/message/reply/${messageId}`)
+                .set('Authorization', `Bearer ${auth2}`)
+                .send(newReplyMessageObject)
+                .expect(httpStatus.FORBIDDEN)
+        });
 
         it('should return an error if the messageId does not exist', () => request(app)
             .post(`${baseURL}/message/reply/99999`)

@@ -14,17 +14,3 @@ const opts = {
 module.exports = (passport) => {
     passport.use(new JwtStrategy(opts, (jwtPayload, done) => done(null, jwtPayload)));
 };
-
-// module.exports = () => {
-//     const jwtLogin = new JwtStrategy(jwtOptions, (req, payload, done) => {
-//         console.log(payload);
-//         done(null, payload);
-//     });
-//     passport.use(jwtLogin);
-//     return {
-//         initialize() {
-//             return passport.initialize();
-//         },
-//         authenticate: passport.authenticate('jwt', { session: false }),
-//     };
-// };
