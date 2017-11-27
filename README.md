@@ -4,6 +4,11 @@
 ## Design
 
 ### API Spec
+The spec can be viewed at https://amida-tech.github.io/amida-messaging-microservice/.
+
+To update the spec, first edit the files in the `docs` directory. Then run `aglio -i docs/src/docs.md --theme flatly -o index.html`.
+
+Merge the resulting changes to the `gh-pages` branch of the repository.
 
 ### Features
 

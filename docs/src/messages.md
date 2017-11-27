@@ -6,7 +6,7 @@ Send a message to any number of recipients.
 + Parameters
     + to ([string], required) - an array of strings with each string corresponding to a recipient username
     + from (string, optional) - sender's username
-    + subject (string, optional) - Subject of the sent message
+    + subject (string, optional) - subject of the sent message
     + message (string, required)
 
 + Request
