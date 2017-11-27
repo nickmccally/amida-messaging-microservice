@@ -93,8 +93,8 @@ Reply to an existing message.
 + Parameters
     + messageId (integer, required) - unique ID of the message being replied to(url)
     + to ([string], required) - an array of strings with each string corresponding to a recipient username
-    + from (string, optional) - sender's username
-    + subject (string, optional) - Subject of the sent message
+    + from (string, required) - sender's username
+    + subject (string, required) - Subject of the sent message
     + message (string, required)
 
 + Request
@@ -141,13 +141,13 @@ Reply to an existing message.
 
 ## Retrieve a collection of messages [/message/list]
 ### Retrieve a collection of messages [GET]
-Retrieve a message using with additional query options.
+Retrieve the current user's messages with the option of including additional query parameters.
 
 + Parameters
-    + from (string) - query the current user's messages with the message sender's username(url)
-    + limit (integer) - corresponds to the specific number of messages to be returned from the result of the query (url)
-    + summary (boolean) - indicating `summary=true` as a url request parameter will force the request to return only `subject`, `from` and `createdAt` fields(url)
-    + archived (boolean) - indicating `archived=true` as a url request parameter will force the request to return only archived messages(url)
+    + from (string, optional) - only return messages from a given sender using the sender's `username`(url)
+    + limit (integer, optional) - corresponds to the specific number of messages to be returned from the result of the query (url)
+    + summary (boolean, optional) - indicating `summary=true` as a url request parameter will force the request to return only `subject`, `from` and `createdAt` fields(url, optional)
+    + archived (boolean, optional) - indicating `archived=true` as a url request parameter will force the request to return only archived messages(url)
 
 + Request
     + Headers
@@ -202,12 +202,12 @@ Retrieve a message using with additional query options.
     ]
 
 
-## Archive a message [/message/archive/messageId]
+## Archive a message [/message/archive/{messageId}]
 ### Archive an existing message [PUT]
 Archive an existing message.
 
 + Parameters
-    + messageId (integer, required) - unique ID of the message being archived
+    + messageId (integer, required) - unique ID of the message to be archived
 
 + Request
     + Headers
@@ -243,12 +243,12 @@ Archive an existing message.
     }
 
 
-## Unarchive a message [/message/unarchive/messageId]
+## Unarchive a message [/message/unarchive/{messageId}]
 ### Unarchive an existing message [PUT]
 Unarchive an existing message.
 
 + Parameters
-    + messageId (integer, required) - unique ID of the message being archived
+    + messageId (integer, required) - unique ID of the message to be unarchived
 
 + Request
     + Headers
@@ -281,4 +281,44 @@ Unarchive an existing message.
         "isDeleted": false,
         "isArchived": false,
         "updatedAt": "2017-11-22T21:42:12.617Z"
+    }
+
+## Soft delete a message [/message/delete/{messageId}]
+### Soft delete an existing message [DELETE]
+Sets the `isDeleted` field of a message to `true`.
+
++ Parameters
+    + messageId (integer, required) - unique ID of the message being archived
+
++ Request
+    + Headers
+
+            Authorization: Bearer ACCESS_TOKEN
+            Content-Type: application/x-www-form-urlencoded
+
+
++ Response 200
+    Errors
+    + `Unauthorized` (401) - no access token specified or invalid access token
+    `Authorization` header
+
+    + Body
+
+    {
+        "id": 9,
+        "owner": "test@test.com",
+        "originalMessageId": 5,
+        "parentMessageId": 5,
+        "to": [
+            "user1",
+            "test@test.com"
+        ],
+        "from": "test@test.com",
+        "subject": "First Message Subject",
+        "message": "First Message Message",
+        "createdAt": "2017-11-22T21:05:23.225Z",
+        "readAt": null,
+        "isDeleted": true,
+        "isArchived": false,
+        "updatedAt": "2017-11-27T17:11:19.844Z"
     }
