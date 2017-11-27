@@ -9,12 +9,12 @@
     }
 </style>
 <h1 id="header-amida-messaging-microservice">Amida Messaging Microservice <a class="permalink" href="#header-amida-messaging-microservice" aria-hidden="true">¶</a></h1>
-<p>A restful microservice allowing messages to be shared between multiple users.</p>
-<p>All API endpoints must be prefixed with the api keyword: for example,
+<p>A restful microservice allowing messaging between multiple users.</p>
+<p>All API endpoints must be prefixed with the <code>api</code> keyword: for example,
 <code>/api/message/list</code> not just <code>/message/list</code>. Request headers should indicate a  <code>Content-Type</code> of <code>application/x-www-form-urlencoded</code> and should include an <code>Authorization</code> field with value <code>Bearer &lt;auth_token&gt;</code>.</p>
 <pre><code><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/x-www-form-urlencoded</span>
   <span class="hljs-attribute">Authorization</span>: <span class="hljs-string">Bearer &lt;auth_token&gt;</span></code></pre>
-<p>Users of the messaging service must be registered on an instance of the <a href="https://github.com/amida-tech/amida-auth-microservice">Amida Auth Microservice</a>. The required <code>auth_token</code> is obtained by authenticating against the Auth Microservice.</p>
+<p>Users of the messaging service must be registered on an instance of the <a href="https://github.com/amida-tech/amida-auth-microservice">Amida Auth Microservice</a>. The required <code>auth_token</code> is obtained by authenticating against the Auth Microservice and receiving a <a href="http://jwt.io">JSON Web Token</a>.</p>
 <p>The request body should be sent <code>x-www-form-urlencoded</code>.</p>
 <h3 id="header-response-status-codes">Response Status Codes <a class="permalink" href="#header-response-status-codes" aria-hidden="true">¶</a></h3>
 <h4 id="header-success">Success <a class="permalink" href="#header-success" aria-hidden="true">¶</a></h4>
@@ -29,12 +29,12 @@
 </ul>
 <h4 id="header-error">Error <a class="permalink" href="#header-error" aria-hidden="true">¶</a></h4>
 <p>Error responses have <a href="http://www.restapitutorial.com/httpstatuscodes.html">standard HTTP error codes</a></p>
-<p>For example, when attempting access messages with an invalid <code>auth_token</code></p>
+<p>For example, when attempting access messages with an invalid <code>auth_token</code>:</p>
 <pre><code class="language-http"><span class="hljs-attribute">Status</span>: <span class="hljs-string">401 Access denied</span></code></pre>
 <section id="messages" class="resource-group"><h2 class="group-heading">Messages <a href="#messages" class="permalink">&para;</a></h2><div id="messages-send-a-message" class="resource"><h3 class="resource-heading">Send a message <a href="#messages-send-a-message" class="permalink">&nbsp;&para;</a></h3><div id="messages-send-a-message-post" class="action post"><h4 class="action-heading"><div class="name">Create new Patient</div><a href="#messages-send-a-message-post" class="method post">POST</a><code class="uri">/message/send</code></h4><p>Send a message to any number of recipients.</p>
 <h4>Example URI</h4><div class="definition"><span class="method post">POST</span>&nbsp;<span class="uri"><span class="hostname"></span>/message/send</span></div><div class="title"><strong>URI Parameters</strong><div class="collapse-button show"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><dl class="inner"><dt>to</dt><dd><code>[string]</code>&nbsp;<span class="required">(required)</span>&nbsp;<p>an array of strings with each string corresponding to a recipient username</p>
 </dd><dt>from</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<p>sender’s username</p>
-</dd><dt>subject</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<p>Subject of the sent message</p>
+</dd><dt>subject</dt><dd><code>string</code>&nbsp;<span>(optional)</span>&nbsp;<p>subject of the sent message</p>
 </dd><dt>message</dt><dd><code>string</code>&nbsp;<span class="required">(required)</span>&nbsp;</dd></dl></div><div class="title"><strong>Request</strong><div class="collapse-button"><span class="close">Hide</span><span class="open">Show</span></div></div><div class="collapse-content"><div class="inner"><h5>Headers</h5><pre><code><span class="hljs-attribute">Authorization</span>: <span class="hljs-string">Bearer ACCESS_TOKEN</span><br><span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/x-www-form-urlencoded</span></code></pre><div style="height: 1px;"></div><h5>Body</h5><pre><code>{
     to: [<span class="hljs-string">"johnDoe"</span>, <span class="hljs-string">"janeDoe"</span>]
     from: <span class="hljs-string">"johnJane"</span>,
