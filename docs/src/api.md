@@ -6,7 +6,7 @@ All API endpoints must be prefixed with the api keyword: for example,
 `/api/message/list` not just `/message/list`. Request headers should indicate a  `Content-Type` of `application/x-www-form-urlencoded` and should include an `Authorization` field with value `Bearer <auth_token>`.
 
 ```
-  Content-Type: application/application/x-www-form-urlencoded
+  Content-Type: application/x-www-form-urlencoded
   Authorization: Bearer <auth_token>
 ```
 
