@@ -14,7 +14,7 @@ filebeat.prospectors:
 
 - input_type: log
   close_inactive: 8760h
-  document_type: api
+  document_type: {{ service_name }}_api
   paths:
     - /home/centos/api/app/*.log
 
