@@ -7,13 +7,12 @@ const Message = db.Message;
 /**
  * Used to load appropriate scope per request.
  */
-const messageScope = function(req) {
-  if (req.originalUrl.includes('/unarchive/')) {
-    return Message.scope({ method: ['findAllForUser', req.user] });
-  } else {
+function messageScope(req) {
+    if (req.originalUrl.includes('/unarchive/')) {
+        return Message.scope({ method: ['findAllForUser', req.user] });
+    }
     return Message.scope({ method: ['forUser', req.user] });
-  }
-};
+}
 
 /**
  * Load message and append to req.
