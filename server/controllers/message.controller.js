@@ -6,7 +6,7 @@ const Message = db.Message;
 
 const useUnscoped = (url) => {
   const unscopedRoutes = ['/unarchive/', '/delete/'];
-  return unscopedRoutes.find(route => url.includes(route)) != undefined;
+  return unscopedRoutes.find(route => url.includes(route)) !== undefined;
 }
 
 /**
