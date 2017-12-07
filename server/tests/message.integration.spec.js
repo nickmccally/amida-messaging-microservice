@@ -606,6 +606,23 @@ describe('Message API:', function () {
                   .catch(done);
           });
 
+          it('should delete the archived message', done => {
+                request(app)
+                    .delete(baseURL + '/message/delete/' + messageId)
+                    .set('Authorization', `Bearer ${auth}`)
+                    .expect(httpStatus.OK)
+                    .then(res => {
+                        MessageUnscoped
+                            .findById(messageId)
+                            .then(message => {
+                                expect(message.isArchived).to.equal(true);
+                                expect(message.isDeleted).to.equal(true);
+                                done();
+                            });
+                    })
+                    .catch(done);
+            });
+
           it('should unarchive and return message', done => {
                 request(app)
                     .put(baseURL + '/message/unarchive/' + messageId)
