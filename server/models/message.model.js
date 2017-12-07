@@ -84,7 +84,7 @@ module.exports = (sequelize, DataTypes) => {
                         owner: user.username,
                     },
                 };
-            }
+            },
         },
     });
 
