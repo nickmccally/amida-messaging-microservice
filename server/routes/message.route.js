@@ -9,14 +9,10 @@ const router = express.Router(); // eslint-disable-line new-cap
 router.use(passport.authenticate('jwt', { session: false }));
 
 router.route('/send')
-    .post(validate(paramValidation.sendMessage),
-          messageCtrl.checkFromUser,
-          messageCtrl.send);
+    .post(validate(paramValidation.sendMessage), messageCtrl.send);
 
 router.route('/reply/:messageId')
-    .post(validate(paramValidation.replyMessage),
-          messageCtrl.checkFromUser,
-          messageCtrl.reply);
+    .post(validate(paramValidation.replyMessage), messageCtrl.reply);
 
 /**
  * url params:

@@ -5,7 +5,6 @@ export default {
     sendMessage: {
         body: {
             to: Joi.array().items(Joi.string()).required(),
-            from: Joi.string().required(),
             subject: Joi.string().required(),
             message: Joi.string().required(),
         },
@@ -13,7 +12,6 @@ export default {
     replyMessage: {
         body: {
             to: Joi.array().items(Joi.string()).required(),
-            from: Joi.string().required(),
             subject: Joi.string().required(),
             message: Joi.string().required(),
         },

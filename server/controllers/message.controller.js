@@ -12,7 +12,7 @@ const useUnscoped = (url) => {
 /**
  * Used to load appropriate scope per request.
  */
-const messageScope = function (req) {
+const messageScope = function messageScope(req) {
     if (useUnscoped(req.originalUrl)) {
         return Message.scope({ method: ['findAllForUser', req.user] });
     }
@@ -38,18 +38,6 @@ function load(req, res, next, id) {
 }
 
 /**
- * Checks that the user authenticated with JWT is in the `from`
- * field of the message (for send or reply).
- */
-function checkFromUser(req, res, next) {
-    if (req.user.username !== req.body.from) {
-        const err = new APIError('Authenticated user must match `from` field in message', httpStatus.FORBIDDEN, true);
-        return next(err);
-    }
-    return next();
-}
-
-/**
  * Get message
  * @returns {Message}
  */
@@ -65,7 +53,6 @@ function get(req, res) {
 /**
  * Send new message
  * @property {Array} req.body.to - Array of user IDs to send the message to.
- * @property {string} req.body.from - The user ID of the sender
  * @property {string} req.body.subject - Subject line of the message
  * @property {string} req.body.message - Body of the message
  * @returns {Message}
@@ -74,23 +61,22 @@ function send(req, res, next) {
     // Each iteration saves the recipient's name from the to[] array as the owner to the db.
     const messageArray = [];
     const newTime = new Date();
-
     // Saves an instance where the sender is owner and readAt=current time
     Message.create({
         to: req.body.to,
-        from: req.body.from,
+        from: req.user.username,
         subject: req.body.subject,
         message: req.body.message,
-        owner: req.body.from,
+        owner: req.user.username,
         createdAt: newTime,
         readAt: newTime,
     }).then(msg => msg.update({ originalMessageId: msg.id }))
       .then((msg) => {
-        // Saves separate instance where each recipient is the owner
+          // Saves separate instance where each recipient is the owner
           for (let i = 0; i < req.body.to.length; i += 1) {
               messageArray.push({
                   to: req.body.to,
-                  from: req.body.from,
+                  from: req.user.username,
                   subject: req.body.subject,
                   message: req.body.message,
                   owner: req.body.to[i],
@@ -107,7 +93,6 @@ function send(req, res, next) {
 /**
  * Reply to a message.
  * @property {Array} req.body.to - Array of user IDs to send the message to.
- * @property {string} req.body.from - The user ID of the sender
  * @property {string} req.body.subject - Subject line of the message
  * @property {string} req.body.message - Body of the message
  * @property {Number} req.params.messageId - DB ID of the message being replied to
@@ -130,7 +115,7 @@ function reply(req, res, next) {
     for (let i = 0; i < req.body.to.length; i += 1) {
         messageArray.push({
             to: req.body.to,
-            from: req.body.from,
+            from: req.user.username,
             subject: req.body.subject,
             message: req.body.message,
             owner: req.body.to[i],
@@ -146,10 +131,10 @@ function reply(req, res, next) {
     // Saves an instance where the sender is owner and readAt=current time
     const messageCreate = Message.create({
         to: req.body.to,
-        from: req.body.from,
+        from: req.user.username,
         subject: req.body.subject,
         message: req.body.message,
-        owner: req.body.from,
+        owner: req.user.username,
         createdAt: newTime,
         readAt: newTime,
         isDeleted: false,
@@ -246,4 +231,4 @@ function unarchive(req, res) {
     return res.send(req.message);
 }
 
-export default { send, reply, get, list, count, remove, load, archive, unarchive, checkFromUser };
+export default { send, reply, get, list, count, remove, load, archive, unarchive };
