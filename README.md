@@ -111,6 +111,8 @@ Be sure to have your postgres host running and replace the `pg_host` value in th
 1. First validate the AMI with a command similar to ```packer validate -var 'aws_access_key=myAWSAcessKey'
 -var 'aws_secret_key=myAWSSecretKey'
 -var 'build_env=development'
+-var 'logstash_host=logstash.amida.com'
+-var 'service_name=amida_messaging_microservice'
 -var 'ami_name=api-messaging-service-boilerplate'
 -var 'node_env=development'
 -var 'jwt_secret=My-JWT-Token'

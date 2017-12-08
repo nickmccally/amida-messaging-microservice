@@ -4,15 +4,20 @@ import APIError from '../helpers/APIError';
 
 const Message = db.Message;
 
+const useUnscoped = (url) => {
+    const unscopedRoutes = ['/unarchive/', '/delete/'];
+    return unscopedRoutes.find(route => url.includes(route)) !== undefined;
+};
+
 /**
  * Used to load appropriate scope per request.
  */
-function messageScope(req) {
-    if (req.originalUrl.includes('/unarchive/')) {
+const messageScope = function (req) {
+    if (useUnscoped(req.originalUrl)) {
         return Message.scope({ method: ['findAllForUser', req.user] });
     }
     return Message.scope({ method: ['forUser', req.user] });
-}
+};
 
 /**
  * Load message and append to req.
