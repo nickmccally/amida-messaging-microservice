@@ -114,8 +114,7 @@ describe('Message API:', function () {
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
                 .then(res => {
-                    expect(res.body.createdAt).to.not.be.null;
-                    expect(res.body.createdAt).to.not.be.undefined;
+                    expect(res.body.createdAt).to.be.a('string');
                     done();
                 })
                 .catch(done);
@@ -130,7 +129,7 @@ describe('Message API:', function () {
                 .then(res => {
                     Message.findOne({where: {owner: testMessageObject.to[0]}})
                             .then(message => {
-                                expect(message.readAt).to.be.null;
+                                expect(message.readAt).to.be.a('null');
                             });
                     done();
                 })
@@ -158,7 +157,7 @@ describe('Message API:', function () {
                 .then(res => {
                     Message.findById(res.body.id)       //do we need to define res.body.id outside?
                         .then(message => {
-                            expect(message.readAt).to.not.be.null;
+                            expect(message.readAt).to.not.be.a('null');
                             expect(message.readAt).to.deep.equal(message.createdAt);
                             done();
                         })
@@ -367,8 +366,9 @@ describe('Message API:', function () {
             .then(res => {
                 expect(res.body).to.be.an('array');
                 expect(res.body[0].from).to.equal(testMessageArray[0].from);
-                expect(res.body[0].to).to.be.undefined;
-                expect(res.body[0].message).to.be.undefined;
+                expect(res.body[0].subject).to.be.a('string');
+                expect(res.body[0].to).to.be.a('undefined');
+                expect(res.body[0].message).to.be.a('undefined');
                 return;
             })
         );
@@ -466,7 +466,6 @@ describe('Message API:', function () {
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => {
-                    expect(res.body.readAt).to.not.be.null;
                     expect(res.body.readAt).to.be.a.dateString();
                     done();
                 })
@@ -561,7 +560,7 @@ describe('Message API:', function () {
                     let id = res.body.id;
                     Message.findById(id)
                         .then(message => {
-                            expect(message).to.be.null;
+                            expect(message).to.be.a('null');
                             done();
                         });
                 })
