@@ -604,11 +604,11 @@ describe('Message API:', function () {
             .then(res => {
                 expect(res.body).to.deep.include(testMessageObject);
                 let id = res.body.id;
-                return Message
-                    .findById(id)
-                    .then(message => expect(message.isArchived).to.equal(false));
+                return MessageUnscoped
+                        .findById(id)
+                        .then(message => expect(message.isArchived).to.equal(false));
             })
-        );  
+        );
 
         after(() => Message
             .destroy({
