@@ -101,8 +101,12 @@ function send(req, res, next) {
 function reply(req, res, next) {
     const messageId = req.params.messageId;
     const parentMessage = req.message;
-    // Make sure that the person replying was in the "to" of that message
-    if (!parentMessage.to.includes(req.user.username)) {
+    function isValidReply() {
+        if (parentMessage.to.includes(req.user.username)) return true;
+        if (parentMessage.from === req.user.username) return true;
+        return false;
+    }
+    if (!isValidReply()) {
         const err = new APIError('Cannot reply to a message not sent to you!', httpStatus.FORBIDDEN, true);
         return next(err);
     }

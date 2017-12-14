@@ -257,11 +257,19 @@ describe('Message API:', function () {
             .expect(httpStatus.NOT_FOUND)
         );
 
-        it('should not find the parent message if the sender was not a recipient of the message specified', () => request(app)
+        it('should not find the parent message if the sender was not a recipient, or sender, of the message specified', () => request(app)
             .post(`${baseURL}/message/reply/${messageId}`)
             .set('Authorization', `Bearer ${authBad}`)
             .send(badReplyMessageObject)
             .expect(httpStatus.NOT_FOUND)
+        );
+
+        it('sender should be able to reply to a message that they sent', () => request(app)
+            .post(`${baseURL}/message/reply/${originalMessageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .send(goodReplyMessageObject)
+            .expect(httpStatus.OK)
+
         );
 
     });
