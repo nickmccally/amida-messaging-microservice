@@ -16,16 +16,6 @@ RUN yarn
 # compile to ES5
 RUN yarn build
 
-# set up dotenv
-RUN echo "NODE_ENV=${NODE_ENV}\n" >> .env &&\
-    echo "PORT=4001\n" >> .env &&\
-    echo "JWT_SECRET=${JWT_SECRET}" >> .env &&\
-    echo "PG_DB=${PG_DB}\n" >> .env &&\
-    echo "PG_PORT=${PG_PORT}\n" >> .env &&\
-    echo "PG_HOST=${PG_HOST}\n" >> .env &&\
-    echo "PG_USER=${PG_USER}\n" >> .env &&\
-    echo "PG_PASSWD=${PG_PASSWD}\n" >> .env
-
 # expose port 4001
 EXPOSE 4001
 
