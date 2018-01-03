@@ -2,7 +2,6 @@
 /* eslint-disable */
 
 import chai, { expect } from 'chai';
-import app from '../../index';
 import {
     Message,
     sequelize
@@ -24,9 +23,7 @@ describe('Message Model:', () => {
 
     before(() => Message.sync({force: true}));
     
-    after(() => Message.destroy({
-        truncate: true
-    }));
+    //after(() => Message.destroy({truncate: true}));
 
     describe('Object creation', () => {
 

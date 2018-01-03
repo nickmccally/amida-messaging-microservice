@@ -4,7 +4,7 @@
 import request from 'supertest';
 import httpStatus from 'http-status';
 import chai, { expect } from 'chai';
-import app from '../../index';
+import app from '../../config/express';
 import p from '../../package';
 import config from '../../config/config'
 import {
@@ -20,7 +20,6 @@ const baseURL = (version > 0 ? `/api/v${version}` : '/api');
 const auth = config.testToken;
 const auth2 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIyIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiYWRtaW4iOnRydWV9.IXN3UeBdUHLxVLHEk9a7IuY6DVQcnuA8ykxRR6JdC_k';
 const authBad = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXJCYWQiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJhZG1pbiI6dHJ1ZX0.Bht75P-tmchDXssNb58r8mzwe4rHpNZVNzYHQtzfp5k';
-
 
 const testMessageFrom = 'user0';
 const testMessageObject = {
@@ -49,10 +48,7 @@ describe('Message API:', function () {
 
     before(() => Message.sync({force: true}));
 
-    after(() => Message.destroy({
-        truncate: true,
-        cascade: true
-    }));
+    //after(() => Message.destroy({truncate: true}));
 
     describe('POST /message/send', function () {
 
