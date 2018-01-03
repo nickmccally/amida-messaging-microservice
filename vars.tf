@@ -40,7 +40,7 @@ variable "availability_zones" {
 }
 
 variable "port" {
-  default = 4000
+  default = 4001
 }
 
 variable "service_name" {

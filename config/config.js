@@ -1,5 +1,4 @@
 import Joi from 'joi';
-
 // require and configure dotenv, will load vars in .env in PROCESS.ENV
 require('dotenv').config();
 
@@ -9,7 +8,7 @@ const envVarsSchema = Joi.object({
         .allow(['development', 'production', 'test', 'provision'])
         .default('development'),
     PORT: Joi.number()
-        .default(4000),
+        .default(4001),
     JWT_SECRET: Joi.string().required()
         .description('JWT Secret required to sign'),
     PG_DB: Joi.string().required()
