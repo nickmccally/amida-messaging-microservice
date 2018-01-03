@@ -1,7 +1,7 @@
 
 /* eslint-disable */
 
-import request from 'supertest-as-promised';
+import request from 'supertest';
 import httpStatus from 'http-status';
 import chai, { expect } from 'chai';
 import app from '../../index';
@@ -50,8 +50,8 @@ describe('Message API:', function () {
     before(() => Message.sync({force: true}));
 
     after(() => Message.destroy({
-        where: {},
-        truncate: true
+        truncate: true,
+        cascade: true
     }));
 
     describe('POST /message/send', function () {
@@ -103,54 +103,45 @@ describe('Message API:', function () {
             )
         );
 
-        it('returned message should have a createdAt timestamp', done => {
+        it('returned message should have a createdAt timestamp', () => 
             request(app)
                 .post(baseURL + '/message/send')
                 .set('Authorization', `Bearer ${auth}`)
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.body.createdAt).to.be.a('string');
-                    done();
-                })
-                .catch(done);
-        });
+                .then(res => expect(res.body.createdAt).to.be.a('string'))
+        );
 
-        it('recipient message should have readAt set to NULL', done => {
+        it('recipient message should have readAt set to NULL', () => 
             request(app)
                 .post(baseURL + '/message/send')
                 .set('Authorization', `Bearer ${auth}`)
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
-                .then(res => {
-                    Message.findOne({where: {owner: testMessageObject.to[0]}})
-                            .then(message => {
-                                expect(message.readAt).to.be.a('null');
-                            });
-                    done();
-                })
-                .catch(done);
-        });
+                .then(res => Message
+                    .findOne({where: {owner: testMessageObject.to[0]}})
+                    .then(message => expect(message.readAt).to.be.a('null'))
+                )
+        );
 
         /**
          * Sent messages are considered read
          */
-        it('sender message should have readAt set to createdAt time', done => {
+        it('sender message should have readAt set to createdAt time', () =>
             request(app)
                 .post(baseURL + '/message/send')
                 .set('Authorization', `Bearer ${auth}`)
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
-                .then(res => {
-                    Message.findById(res.body.id)       //do we need to define res.body.id outside?
-                        .then(message => {
-                            expect(message.readAt).to.not.be.a('null');
-                            expect(message.readAt).to.deep.equal(message.createdAt);
-                            done();
-                        })
-                        .catch(done);
-                 });
-        });
+                .then(res => Message
+                    .findById(res.body.id)  //do we need to define res.body.id outside?
+                    .then(message => {
+                        expect(message.readAt).to.not.be.a('null');
+                        expect(message.readAt).to.deep.equal(message.createdAt);
+                        return;
+                    })
+                )
+        );
     });
 
     describe('POST /message/reply/:messageId', () => {
@@ -280,24 +271,25 @@ describe('Message API:', function () {
         let limit = 2;
         let summary = true;
 
-        before(done => {
-            Message.destroy({
+        before(() => Message
+            .destroy({
                 where: {},
                 truncate: true
-            }).then(message => {
-                Message.bulkCreate(testMessageArray).then(messages => {
+            }).then(message => Message
+                .bulkCreate(testMessageArray)
+                .then(messages => {
                     userName = messages[0].from;
-                    done();
-                });
-            });
-        });
+                    return;
+                })
+            )
+        );
 
-        after(done => {
-            Message.destroy({
+        after(() => Message
+            .destroy({
                 where: {},
                 truncate: true
-            }).then(() => done());
-        });
+            })
+        );
 
         it('should return OK', () => request(app)
             .get(baseURL + '/message/list')
@@ -431,29 +423,21 @@ describe('Message API:', function () {
             .expect(httpStatus.OK)
         );
 
-        it('should return the specified Message', done => {
+        it('should return the specified Message', () =>
             request(app)
                 .get(`${baseURL}/message/get/${messageId}`)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.body).to.deep.include(testMessageObject);
-                    done();
-                })
-                .catch(done);
-        });
+                .then(res => expect(res.body).to.deep.include(testMessageObject))
+        );
 
-        it('should mark the Message retrieved as read', done => {
+        it('should mark the Message retrieved as read', () =>
             request(app)
                 .get(`${baseURL}/message/get/${messageId}`)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.body.readAt).to.be.a.dateString();
-                    done();
-                })
-                .catch(done);
-        });
+                .then(res => expect(res.body.readAt).to.be.a.dateString())
+        );
 
     });
 
@@ -522,33 +506,26 @@ describe('Message API:', function () {
                 .expect(httpStatus.OK)
         );
 
-        it('should return the deleted Message', done => {
+        it('should return the deleted Message', () =>
             request(app)
                 .delete(baseURL + '/message/delete/' + messageId)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
-                .then(res => {
-                    expect(res.body).to.deep.include(testMessageObject);
-                    done();
-                })
-                .catch(done);
-        });
+                .then(res => expect(res.body).to.deep.include(testMessageObject))
+        );
 
-        it('should delete the message from the DB', done => {
+        it('should delete the message from the DB', () =>
             request(app)
                 .delete(baseURL + '/message/delete/' + messageId)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => {
                     let id = res.body.id;
-                    Message.findById(id)
-                        .then(message => {
-                            expect(message).to.be.a('null');
-                            done();
-                        });
+                    return Message
+                        .findById(id)
+                        .then(message => expect(message).to.be.a('null'));
                 })
-                .catch(done);
-        });
+        );
 
     });
 
@@ -570,40 +547,34 @@ describe('Message API:', function () {
                 }))
         );
 
-        it('should archive and return message', done => {
-              request(app)
-                  .put(baseURL + '/message/archive/' + messageId)
-                  .set('Authorization', `Bearer ${auth}`)
-                  .expect(httpStatus.OK)
-                  .then(res => {
-                      expect(res.body).to.deep.include(testMessageObject);
-                      let id = res.body.id;
-                      MessageUnscoped
-                          .findById(id)
-                          .then(message => {
-                              expect(message.isArchived).to.equal(true);
-                              done();
-                          });
-                  })
-                  .catch(done);
-          });
+        it('should archive and return message', () =>
+            request(app)
+                .put(baseURL + '/message/archive/' + messageId)
+                .set('Authorization', `Bearer ${auth}`)
+                .expect(httpStatus.OK)
+                .then(res => {
+                    expect(res.body).to.deep.include(testMessageObject);
+                    let id = res.body.id;
+                    return MessageUnscoped
+                        .findById(id)
+                        .then(message => expect(message.isArchived).to.equal(true));
+                })
+        );
 
-        it('should delete the archived message', done => {
+        it('should delete the archived message', () =>
             request(app)
                 .delete(baseURL + '/message/delete/' + messageId)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
-                .then(res => {
-                    MessageUnscoped
-                        .findById(messageId)
-                        .then(message => {
-                            expect(message.isArchived).to.equal(true);
-                            expect(message.isDeleted).to.equal(true);
-                            done();
-                        });
-                })
-                .catch(done);
-        });
+                .then(res => MessageUnscoped
+                    .findById(messageId)
+                    .then(message => {
+                        expect(message.isArchived).to.equal(true);
+                        expect(message.isDeleted).to.equal(true);
+                        return;
+                    })
+                )
+        );
 
         it('should unarchive and return message', () => request(app)
             .put(baseURL + '/message/unarchive/' + messageId)

@@ -22,52 +22,37 @@ const testMessageObject = {
 
 describe('Message Model:', () => {
 
-    before(() => {
-        return Message.sync({
-            force: true
-        });
-    });
+    before(() => Message.sync({force: true}));
     
-    after(() => {
-        return Message.destroy({
-            where: {},
-            truncate: true
-        });
-    });
+    after(() => Message.destroy({
+        truncate: true
+    }));
 
     describe('Object creation', () => {
 
-        it('Create Message', done => {
-            Message
-                .create(testMessageObject)
-                .then(message => {
-                    expect(message).to.exist;
-                    done();
-                })
-                .catch(done);
-        });
+        it('Create Message', () => Message
+            .create(testMessageObject)
+            .then(message => expect(message).to.exist)
+        );
 
-        it('Verify message', done => {
-            Message
-                .create(testMessageObject)
+        it('Verify message', () => Message
+            .create(testMessageObject)
+            .then(message => Message
+                .findById(message.id)
                 .then(message => {
-                    Message
-                        .findById(message.id)
-                        .then(message => {
-                            expect(message.owner).to.equal(testMessageObject.owner);
-                            expect(message.originalMessageId).to.be.null;
-                            expect(message.parentMessageId).to.be.null;
-                            expect(message.to).to.deep.equal(testMessageObject.to);
-                            expect(message.from).to.equal(testMessageObject.from);
-                            expect(message.subject).to.equal(testMessageObject.subject);
-                            expect(message.message).to.equal(testMessageObject.message);
-                            expect(message.createdAt).to.equalDate(testMessageObject.createdAt);
-                            expect(message.readAt).to.be.null;
-                            done();
-                        });
+                    expect(message.owner).to.equal(testMessageObject.owner);
+                    expect(message.originalMessageId).to.be.null;
+                    expect(message.parentMessageId).to.be.null;
+                    expect(message.to).to.deep.equal(testMessageObject.to);
+                    expect(message.from).to.equal(testMessageObject.from);
+                    expect(message.subject).to.equal(testMessageObject.subject);
+                    expect(message.message).to.equal(testMessageObject.message);
+                    expect(message.createdAt).to.equalDate(testMessageObject.createdAt);
+                    expect(message.readAt).to.be.null;
+                    return;
                 })
-                .catch(done);
-        });
+            )
+        );
 
     });
 
