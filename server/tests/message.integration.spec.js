@@ -4,13 +4,14 @@
 import request from 'supertest';
 import httpStatus from 'http-status';
 import chai, { expect } from 'chai';
-import app from '../../config/express';
+import app from '../../index';
 import p from '../../package';
 import config from '../../config/config'
 import {
     Message,
     sequelize
 } from '../../config/sequelize';
+import { setTimeout } from 'timers';
 
 chai.use(require('chai-datetime'));
 chai.use(require('chai-date-string'));
@@ -46,7 +47,13 @@ fromArray.forEach(function(receiver) {
 
 describe('Message API:', function () {
 
-    before(() => Message.sync({force: true}));
+    // run health check to ensure sync runs
+    before(done => {
+        request(app)
+            .get('/api/health-check')
+            .expect(httpStatus.OK)
+            .then(setTimeout(done, 1000))
+    });
 
     //after(() => Message.destroy({truncate: true}));
 
