@@ -235,4 +235,43 @@ function unarchive(req, res) {
     return res.send(req.message);
 }
 
-export default { send, reply, get, list, count, remove, load, archive, unarchive };
+/**
+ * Remove readAt timestamp
+ * sets readAt of message with messageId to null
+ * @returns {Message}
+ */
+function removeReadAt(req, res) {
+    if (req.message) {
+        req.message.update({ readAt: null });
+    }
+    return res.send(req.message);
+}
+
+/**
+ * Set readAt timestamp
+ * sets readAt of message with the messageId to newTime
+ * @returns {Message}
+ */
+function setReadAt(req, res) {
+    const newTime = req.params.newTime;
+    if (req.message) {
+        req.message.update({
+            readAt: newTime,
+        });
+    }
+    return res.send(req.message);
+}
+
+export default {
+    send,
+    reply,
+    get,
+    list,
+    count,
+    remove,
+    load,
+    archive,
+    unarchive,
+    removeReadAt,
+    setReadAt,
+};
