@@ -5,10 +5,10 @@ import httpStatus from 'http-status';
 import chai, { expect } from 'chai';
 import app from '../../index';
 import p from '../../package';
-import config from '../../config/config'
+import config from '../../config/config';
 import {
     Message,
-    sequelize
+    sequelize,
 } from '../../config/sequelize';
 import { setTimeout } from 'timers';
 
@@ -23,41 +23,39 @@ const authBad = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXJCYW
 
 const testMessageFrom = 'user0';
 const testMessageObject = {
-    to: ['user1','user2'],
+    to: ['user1', 'user2'],
     subject: 'Test Message',
     message: 'Test post please ignore',
 };
 
 const testMessageArray = [];
-const fromArray = ['user0','user1','user2','user3'];
+const fromArray = ['user0', 'user1', 'user2', 'user3'];
 const MessageUnscoped = Message.unscoped();
 // 4 senders send message to 4 recipients each
-fromArray.forEach(function(receiver) {
-  fromArray.forEach(function(sender) {
-    testMessageArray.push({
-        to: fromArray,
-        from: sender,
-        subject: 'Test Message',
-        message: 'Test post please ignore',
-        owner: receiver
-    })
-  })
+fromArray.forEach((receiver) => {
+    fromArray.forEach((sender) => {
+        testMessageArray.push({
+            to: fromArray,
+            from: sender,
+            subject: 'Test Message',
+            message: 'Test post please ignore',
+            owner: receiver,
+        });
+    });
 });
 
-describe('Message API:', function () {
-
+describe('Message API:', () => {
     // run health check to ensure sync runs
-    before(done => {
+    before((done) => {
         request(app)
             .get('/api/health-check')
             .expect(httpStatus.OK)
-            .then(setTimeout(done, 1000))
+            .then(setTimeout(done, 1000));
     });
 
-    //after(() => Message.destroy({truncate: true}));
+    // after(() => Message.destroy({truncate: true}));
 
-    describe('POST /message/send', function () {
-
+    describe('POST /message/send', () => {
         it('should return OK', () => request(app)
             .post(`${baseURL}/message/send`)
             .set('Authorization', `Bearer ${auth}`)
@@ -71,11 +69,11 @@ describe('Message API:', function () {
          * Creating a message should return the sender's version of the message.
          */
         it('should return the sender\'s Message object', () => request(app)
-            .post(baseURL + '/message/send')
+            .post(`${baseURL}/message/send`)
             .set('Authorization', `Bearer ${auth}`)
             .send(testMessageObject)
             .expect(httpStatus.OK)
-            .then(res => {
+            .then((res) => {
                 expect(res.body.to).to.deep.equal(testMessageObject.to);
                 expect(res.body.from).to.equal(testMessageFrom);
                 expect(res.body.owner).to.equal(testMessageFrom);
@@ -86,42 +84,42 @@ describe('Message API:', function () {
         );
 
         it('should create new Messages in the DB', () => request(app)
-            .post(baseURL + '/message/send')
+            .post(`${baseURL}/message/send`)
             .set('Authorization', `Bearer ${auth}`)
             .send(testMessageObject)
             .expect(httpStatus.OK)
             .then(res => Message.findById(res.body.id)
-                .then(message => {
+                .then((message) => {
                     expect(message.subject).to.equal(testMessageObject.subject);
                     return Message
-                        .findOne({where: {owner: testMessageObject.to[0]}})
-                        .then(message => {
+                        .findOne({ where: { owner: testMessageObject.to[0] } })
+                        .then((message) => {
                             expect(message.from).to.equal(testMessageFrom);
                             expect(message.subject).to.equal(testMessageObject.subject);
                             expect(message.message).to.equal(testMessageObject.message);
                             return;
-                    });
+                        });
                 })
             )
         );
 
-        it('returned message should have a createdAt timestamp', () => 
+        it('returned message should have a createdAt timestamp', () =>
             request(app)
-                .post(baseURL + '/message/send')
+                .post(`${baseURL}/message/send`)
                 .set('Authorization', `Bearer ${auth}`)
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
                 .then(res => expect(res.body.createdAt).to.be.a('string'))
         );
 
-        it('recipient message should have readAt set to NULL', () => 
+        it('recipient message should have readAt set to NULL', () =>
             request(app)
-                .post(baseURL + '/message/send')
+                .post(`${baseURL}/message/send`)
                 .set('Authorization', `Bearer ${auth}`)
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
                 .then(res => Message
-                    .findOne({where: {owner: testMessageObject.to[0]}})
+                    .findOne({ where: { owner: testMessageObject.to[0] } })
                     .then(message => expect(message.readAt).to.be.a('null'))
                 )
         );
@@ -131,13 +129,13 @@ describe('Message API:', function () {
          */
         it('sender message should have readAt set to createdAt time', () =>
             request(app)
-                .post(baseURL + '/message/send')
+                .post(`${baseURL}/message/send`)
                 .set('Authorization', `Bearer ${auth}`)
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
                 .then(res => Message
-                    .findById(res.body.id)  //do we need to define res.body.id outside?
-                    .then(message => {
+                    .findById(res.body.id)  // do we need to define res.body.id outside?
+                    .then((message) => {
                         expect(message.readAt).to.not.be.a('null');
                         expect(message.readAt).to.deep.equal(message.createdAt);
                         return;
@@ -147,21 +145,20 @@ describe('Message API:', function () {
     });
 
     describe('POST /message/reply/:messageId', () => {
-
         const goodReplyMessageObject = {
-            to: ['user1','user0'],
+            to: ['user1', 'user0'],
             subject: 'RE: Test Message',
             message: 'Test reply please ignore',
         };
 
         const badReplyMessageObject = {
-            to: ['user1','user0'],
+            to: ['user1', 'user0'],
             subject: 'RE: Test Message',
             message: 'Bad reply please ignore',
         };
 
         const secondReplyMessageObject = {
-            to: ['user1','user0'],
+            to: ['user1', 'user0'],
             subject: 'RE: RE: Test Message',
             message: 'I have to keep sending replies',
         };
@@ -176,8 +173,8 @@ describe('Message API:', function () {
             .expect(httpStatus.OK)
             .then((origMsg) => {
                 originalMessageId = origMsg.body.originalMessageId;
-                return Message.scope({ method: ['forUser', {username: 'user2'}] })
-                              .findOne({where: {originalMessageId}});
+                return Message.scope({ method: ['forUser', { username: 'user2' }] })
+                              .findOne({ where: { originalMessageId } });
             })
             .then((message) => {
                 messageId = message.id;
@@ -215,22 +212,22 @@ describe('Message API:', function () {
             .expect(httpStatus.OK)
             .then((res) => {
                 // Message 1: owned by respondent (user2)
-                const m1 = Message.findOne({where: {
+                const m1 = Message.findOne({ where: {
                     owner: 'user2',
-                    parentMessageId: messageId
-                }});
+                    parentMessageId: messageId,
+                } });
 
                 // Message 2: owned by user0
-                const m2 = Message.findOne({where: {
+                const m2 = Message.findOne({ where: {
                     owner: goodReplyMessageObject.to[0],
-                    parentMessageId: messageId
-                }});
+                    parentMessageId: messageId,
+                } });
 
                 // Message 3: owned by user1
-                const m3 = Message.findOne({where: {
+                const m3 = Message.findOne({ where: {
                     owner: goodReplyMessageObject.to[1],
-                    parentMessageId: messageId
-                }});
+                    parentMessageId: messageId,
+                } });
 
                 return Promise.join(m1, m2, m3, (res1, res2, res3) => {
                     expect(res1.originalMessageId).to.equal(originalMessageId);
@@ -264,22 +261,21 @@ describe('Message API:', function () {
             .expect(httpStatus.OK)
 
         );
-
     });
 
-    //parameters: from, summary, limit
-    describe('GET /message/list', function () {
+    // parameters: from, summary, limit
+    describe('GET /message/list', () => {
         let userName;
-        let limit = 2;
-        let summary = true;
+        const limit = 2;
+        const summary = true;
 
         before(() => Message
             .destroy({
                 where: {},
-                truncate: true
+                truncate: true,
             }).then(message => Message
                 .bulkCreate(testMessageArray)
-                .then(messages => {
+                .then((messages) => {
                     userName = messages[0].from;
                     return;
                 })
@@ -289,12 +285,12 @@ describe('Message API:', function () {
         after(() => Message
             .destroy({
                 where: {},
-                truncate: true
+                truncate: true,
             })
         );
 
         it('should return OK', () => request(app)
-            .get(baseURL + '/message/list')
+            .get(`${baseURL}/message/list`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
         );
@@ -302,7 +298,7 @@ describe('Message API:', function () {
         // this cannot be tested correctly without auth microservice.
         // Just returning all messages for now, without considering the owner
         it('should return all Messages addressed to a user', () => request(app)
-            .get(baseURL + '/message/list')
+            .get(`${baseURL}/message/list`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
             .then((res) => {
@@ -314,10 +310,10 @@ describe('Message API:', function () {
         );
 
         it('has an option to limit Messages returned', () => request(app)
-            .get(baseURL + '/message/list?limit=' + limit)
+            .get(`${baseURL}/message/list?limit=${limit}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then(res => {
+            .then((res) => {
                 expect(res.body).to.be.an('array');
                 expect(res.body.length).to.be.at.most(limit);
                 return;
@@ -325,10 +321,10 @@ describe('Message API:', function () {
         );
 
         it('has an option to limit by sender', () => request(app)
-            .get(baseURL + '/message/list?from=' + userName)
+            .get(`${baseURL}/message/list?from=${userName}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then(res => {
+            .then((res) => {
                 expect(res.body).to.be.an('array');
                 expect(res.body[0].from).to.equal(testMessageArray[0].from);
                 expect(res.body[0].to).to.deep.equal(testMessageArray[0].to);
@@ -337,10 +333,10 @@ describe('Message API:', function () {
         );
 
         it('has an option to return summaries', () => request(app)
-            .get(baseURL + '/message/list?summary=' + summary)
+            .get(`${baseURL}/message/list?summary=${summary}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then(res => {
+            .then((res) => {
                 expect(res.body).to.be.an('array');
                 expect(res.body[0].from).to.equal(testMessageArray[0].from);
                 expect(res.body[0].subject).to.be.a('string');
@@ -349,7 +345,6 @@ describe('Message API:', function () {
                 return;
             })
         );
-
     });
 
     // describe('GET /message/count/:userId', function () {
@@ -404,8 +399,7 @@ describe('Message API:', function () {
 
     // });
 
-    describe('GET /message/get/:messageId', function () {
-
+    describe('GET /message/get/:messageId', () => {
         let messageId;
 
         before(() => request(app)
@@ -440,7 +434,6 @@ describe('Message API:', function () {
                 .expect(httpStatus.OK)
                 .then(res => expect(res.body.readAt).to.be.a.dateString())
         );
-
     });
 
     // TODO: this one is going to be hard
@@ -483,14 +476,13 @@ describe('Message API:', function () {
 
     // });
 
-    describe('DELETE /message/delete/:messageId', function () {
-
+    describe('DELETE /message/delete/:messageId', () => {
         let messageId;
 
         beforeEach(() => Message
             .destroy({
                 where: {},
-                truncate: true
+                truncate: true,
             }).then(() => request(app)
                 .post(`${baseURL}/message/send`)
                 .set('Authorization', `Bearer ${auth}`)
@@ -503,14 +495,14 @@ describe('Message API:', function () {
         );
 
         it('should return OK', () => request(app)
-                .delete(baseURL + '/message/delete/' + messageId)
+                .delete(`${baseURL}/message/delete/${messageId}`)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
         );
 
         it('should return the deleted Message', () =>
             request(app)
-                .delete(baseURL + '/message/delete/' + messageId)
+                .delete(`${baseURL}/message/delete/${messageId}`)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => expect(res.body).to.deep.include(testMessageObject))
@@ -518,27 +510,26 @@ describe('Message API:', function () {
 
         it('should delete the message from the DB', () =>
             request(app)
-                .delete(baseURL + '/message/delete/' + messageId)
+                .delete(`${baseURL}/message/delete/${messageId}`)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
-                .then(res => {
-                    let id = res.body.id;
+                .then((res) => {
+                    const id = res.body.id;
                     return Message
                         .findById(id)
                         .then(message => expect(message).to.be.a('null'));
                 })
         );
-
     });
 
-    describe('PUT /message/archive/:messageId', function () {
+    describe('PUT /message/archive/:messageId', () => {
         let messageId;
 
         before(() => Message
                       .destroy({
                           where: {},
-                          truncate: true
-            }).then(() => request(app)
+                          truncate: true,
+                      }).then(() => request(app)
                 .post(`${baseURL}/message/send`)
                 .set('Authorization', `Bearer ${auth}`)
                 .send(testMessageObject)
@@ -551,12 +542,12 @@ describe('Message API:', function () {
 
         it('should archive and return message', () =>
             request(app)
-                .put(baseURL + '/message/archive/' + messageId)
+                .put(`${baseURL}/message/archive/${messageId}`)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
-                .then(res => {
+                .then((res) => {
                     expect(res.body).to.deep.include(testMessageObject);
-                    let id = res.body.id;
+                    const id = res.body.id;
                     return MessageUnscoped
                         .findById(id)
                         .then(message => expect(message.isArchived).to.equal(true));
@@ -565,12 +556,12 @@ describe('Message API:', function () {
 
         it('should delete the archived message', () =>
             request(app)
-                .delete(baseURL + '/message/delete/' + messageId)
+                .delete(`${baseURL}/message/delete/${messageId}`)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
                 .then(res => MessageUnscoped
                     .findById(messageId)
-                    .then(message => {
+                    .then((message) => {
                         expect(message.isArchived).to.equal(true);
                         expect(message.isDeleted).to.equal(true);
                         return;
@@ -579,12 +570,12 @@ describe('Message API:', function () {
         );
 
         it('should unarchive and return message', () => request(app)
-            .put(baseURL + '/message/unarchive/' + messageId)
+            .put(`${baseURL}/message/unarchive/${messageId}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then(res => {
+            .then((res) => {
                 expect(res.body).to.deep.include(testMessageObject);
-                let id = res.body.id;
+                const id = res.body.id;
                 return MessageUnscoped
                         .findById(id)
                         .then(message => expect(message.isArchived).to.equal(false));
@@ -594,7 +585,7 @@ describe('Message API:', function () {
         after(() => Message
             .destroy({
                 where: {},
-                truncate: true
+                truncate: true,
             })
         );
     });

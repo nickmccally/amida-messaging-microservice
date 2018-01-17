@@ -3,7 +3,7 @@
 import chai, { expect } from 'chai';
 import {
     Message,
-    sequelize
+    sequelize,
 } from '../../config/sequelize';
 import _ from 'lodash';
 
@@ -19,13 +19,11 @@ const testMessageObject = {
 };
 
 describe('Message Model:', () => {
+    before(() => Message.sync({ force: true }));
 
-    before(() => Message.sync({force: true}));
-    
-    //after(() => Message.destroy({truncate: true}));
+    // after(() => Message.destroy({truncate: true}));
 
     describe('Object creation', () => {
-
         it('Create Message', () => Message
             .create(testMessageObject)
             .then(message => expect(message).to.exist)
@@ -35,7 +33,7 @@ describe('Message Model:', () => {
             .create(testMessageObject)
             .then(message => Message
                 .findById(message.id)
-                .then(message => {
+                .then((message) => {
                     expect(message.owner).to.equal(testMessageObject.owner);
                     expect(message.originalMessageId).to.be.null;
                     expect(message.parentMessageId).to.be.null;
@@ -49,7 +47,5 @@ describe('Message Model:', () => {
                 })
             )
         );
-
     });
-
 });
