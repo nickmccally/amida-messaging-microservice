@@ -32,8 +32,8 @@ describe('Message Model:', () => {
 
         it('Verify message', () => Message
             .create(testMessageObject)
-            .then(message => Message
-                .findById(message.id)
+            .then(createdMessage => Message
+                .findById(createdMessage.id)
                 .then((message) => {
                     expect(message.owner).to.equal(testMessageObject.owner);
                     expect(message.originalMessageId).to.be.null;

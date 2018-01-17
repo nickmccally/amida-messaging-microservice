@@ -97,10 +97,10 @@ describe('Message API:', () => {
                     expect(message.subject).to.equal(testMessageObject.subject);
                     return Message
                         .findOne({ where: { owner: testMessageObject.to[0] } })
-                        .then((message) => {
-                            expect(message.from).to.equal(testMessageFrom);
-                            expect(message.subject).to.equal(testMessageObject.subject);
-                            expect(message.message).to.equal(testMessageObject.message);
+                        .then((foundMessage) => {
+                            expect(foundMessage.from).to.equal(testMessageFrom);
+                            expect(foundMessage.subject).to.equal(testMessageObject.subject);
+                            expect(foundMessage.message).to.equal(testMessageObject.message);
                             return;
                         });
                 })
@@ -122,7 +122,7 @@ describe('Message API:', () => {
                 .set('Authorization', `Bearer ${auth}`)
                 .send(testMessageObject)
                 .expect(httpStatus.OK)
-                .then(res => Message
+                .then(() => Message
                     .findOne({ where: { owner: testMessageObject.to[0] } })
                     .then(message => expect(message.readAt).to.be.a('null'))
                 )
@@ -214,7 +214,7 @@ describe('Message API:', () => {
             .set('Authorization', `Bearer ${auth2}`)
             .send(goodReplyMessageObject)
             .expect(httpStatus.OK)
-            .then((res) => {
+            .then(() => {
                 // Message 1: owned by respondent (user2)
                 const m1 = Message.findOne({ where: {
                     owner: 'user2',
@@ -277,7 +277,7 @@ describe('Message API:', () => {
             .destroy({
                 where: {},
                 truncate: true,
-            }).then(message => Message
+            }).then(() => Message
                 .bulkCreate(testMessageArray)
                 .then((messages) => {
                     userName = messages[0].from;
@@ -563,7 +563,7 @@ describe('Message API:', () => {
                 .delete(`${baseURL}/message/delete/${messageId}`)
                 .set('Authorization', `Bearer ${auth}`)
                 .expect(httpStatus.OK)
-                .then(res => MessageUnscoped
+                .then(() => MessageUnscoped
                     .findById(messageId)
                     .then((message) => {
                         expect(message.isArchived).to.equal(true);
