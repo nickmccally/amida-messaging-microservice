@@ -161,12 +161,6 @@ describe('Message API:', () => {
             message: 'Bad reply please ignore',
         };
 
-        const secondReplyMessageObject = {
-            to: ['user1', 'user0'],
-            subject: 'RE: RE: Test Message',
-            message: 'I have to keep sending replies',
-        };
-
         let messageId;
         let originalMessageId;
 
