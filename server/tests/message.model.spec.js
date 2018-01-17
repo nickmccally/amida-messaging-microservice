@@ -36,14 +36,14 @@ describe('Message Model:', () => {
                 .findById(createdMessage.id)
                 .then((message) => {
                     expect(message.owner).to.equal(testMessageObject.owner);
-                    expect(message.originalMessageId).to.be.null;
-                    expect(message.parentMessageId).to.be.null;
+                    expect(message.originalMessageId).to.be.a('null');
+                    expect(message.parentMessageId).to.be.a('null');
                     expect(message.to).to.deep.equal(testMessageObject.to);
                     expect(message.from).to.equal(testMessageObject.from);
                     expect(message.subject).to.equal(testMessageObject.subject);
                     expect(message.message).to.equal(testMessageObject.message);
                     expect(message.createdAt).to.equalDate(testMessageObject.createdAt);
-                    expect(message.readAt).to.be.null;
+                    expect(message.readAt).to.be.a('null');
                     return;
                 })
             )
