@@ -1,13 +1,14 @@
 /* eslint-env mocha */
 
 import chai, { expect } from 'chai';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import chaiDateTime from 'chai-datetime';
+
 import {
     Message,
-    sequelize,
 } from '../../config/sequelize';
-import _ from 'lodash';
 
-chai.use(require('chai-datetime'));
+chai.use(chaiDateTime);
 
 const testMessageObject = {
     owner: 'user1',

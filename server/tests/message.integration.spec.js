@@ -3,17 +3,21 @@
 import request from 'supertest';
 import httpStatus from 'http-status';
 import chai, { expect } from 'chai';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import chaiDatetime from 'chai-datetime';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import chaiDateString from 'chai-date-string';
+import { setTimeout } from 'timers';
+
 import app from '../../index';
 import p from '../../package';
 import config from '../../config/config';
 import {
     Message,
-    sequelize,
 } from '../../config/sequelize';
-import { setTimeout } from 'timers';
 
-chai.use(require('chai-datetime'));
-chai.use(require('chai-date-string'));
+chai.use(chaiDatetime);
+chai.use(chaiDateString);
 
 const version = p.version.split('.').shift();
 const baseURL = (version > 0 ? `/api/v${version}` : '/api');
