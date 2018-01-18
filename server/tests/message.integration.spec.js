@@ -434,45 +434,49 @@ describe('Message API:', () => {
         );
     });
 
-    // TODO: this one is going to be hard
-    // describe('GET /message/thread/:originalMessageId', () => {
+    describe('GET /message/thread/:originalMessageId', () => {
+        let originalMessageId;
+        let responseMessageId;
 
-    //     let messageId;
+        const responseMessageObject = {
+            to: ['user1', 'user2'],
+            subject: 'Test Message',
+            message: 'Response post please ignore',
+        };
 
-    //     before(done => {
-    //         Message.create(testMessageObject)
-    //             .then(message => {
-    //                 originalMessageId = message.originalMessageId;
-    //                 done();
-    //             });
-    //     });
+        before(() => request(app)
+            .post(`${baseURL}/message/send`)
+            .set('Authorization', `Bearer ${auth}`)
+            .send(testMessageObject)
+            .then((message) => {
+                originalMessageId = message.body.originalMessageId;
+            })
+            .then(() => request(app)
+                .post(`${baseURL}/message/reply/${originalMessageId}`)
+                .set('Authorization', `Bearer ${auth}`)
+                .send(responseMessageObject)
+                .then((message) => {
+                    responseMessageId = message.body.id;
+                })));
 
-    //     // TODO: create a real response message here
+        it('should return OK', () => request(app)
+                .get(`${baseURL}/message/thread${originalMessageId}`)
+                .set('Authorization', `Bearer ${auth}`)
+                .expect(httpStatus.OK)
+                .then((res) => {
+                    expect(res.text).to.equal('OK');
+                }));
 
-    //     it('should return OK', done => {
-    //         request(app)
-    //             .get(baseURL + '/message/thread' + originalMessageId)
-    //             .expect(httpStatus.OK)
-    //             .then(res => {
-    //                 expect(res.text).to.equal('OK');
-    //                 done();
-    //             })
-    //             .catch(done);
-    //     });
-
-    //     it('should return an array of message IDs, starting with the original message', done => {
-    //         request(app)
-    //             .get(baseURL + '/message/thread' + originalMessageId)
-    //             .expect(httpStatus.OK)
-    //             .then(res => {
-    //                 expect(res.body).to.be.an.array;
-    //                 // TODO check specific IDs
-    //                 done();
-    //             })
-    //             .catch(done);
-    //     });
-
-    // });
+        it('should return an array of message IDs, starting with the original message', () => request(app)
+                .get(`${baseURL}/message/thread${originalMessageId}`)
+                .set('Authorization', `Bearer ${auth}`)
+                .expect(httpStatus.OK)
+                .then((res) => {
+                    expect(res.body).to.be.an('array');
+                    expect(res.body.map(body => body.id)).to.deep.equal(
+                        [originalMessageId, responseMessageId]);
+                }));
+    });
 
     describe('DELETE /message/delete/:messageId', () => {
         let messageId;
