@@ -9,11 +9,10 @@ import chaiDatetime from 'chai-datetime';
 import chaiDateString from 'chai-date-string';
 import { setTimeout } from 'timers';
 
-import app from '../../index';
 import {
     Message,
 } from '../../config/sequelize';
-import { auth, baseURL } from './common.integration.js';
+import { app, auth, baseURL } from './common.integration.js';
 
 chai.use(chaiDatetime);
 chai.use(chaiDateString);

@@ -3,8 +3,7 @@ import request from 'supertest';
 import httpStatus from 'http-status';
 import { expect } from 'chai';
 
-import app from '../../index';
-import { auth, baseURL } from './common.integration.js';
+import { auth, baseURL, app } from './common.integration.js';
 
 const testMessageObject = {
     to: ['user1', 'user2'],
