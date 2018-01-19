@@ -450,32 +450,40 @@ describe('Message API:', () => {
             .send(testMessageObject)
             .then((message) => {
                 originalMessageId = message.body.originalMessageId;
-            })
-            .then(() => request(app)
+                request(app)
                 .post(`${baseURL}/message/reply/${originalMessageId}`)
                 .set('Authorization', `Bearer ${auth}`)
                 .send(responseMessageObject)
-                .then((message) => {
-                    responseMessageId = message.body.id;
-                })));
+                .then((response) => {
+                    responseMessageId = response.body.id;
+                });
+            }));
 
         it('should return OK', () => request(app)
-                .get(`${baseURL}/message/thread${originalMessageId}`)
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-                .then((res) => {
-                    expect(res.text).to.equal('OK');
-                }));
+            .get(`${baseURL}/message/thread/${originalMessageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK));
 
-        it('should return an array of message IDs, starting with the original message', () => request(app)
-                .get(`${baseURL}/message/thread${originalMessageId}`)
-                .set('Authorization', `Bearer ${auth}`)
-                .expect(httpStatus.OK)
-                .then((res) => {
-                    expect(res.body).to.be.an('array');
-                    expect(res.body.map(body => body.id)).to.deep.equal(
-                        [originalMessageId, responseMessageId]);
-                }));
+        it('should return an array of messages with ids in reply order', () => request(app)
+            .get(`${baseURL}/message/thread/${originalMessageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.be.an('array');
+                expect(res.body.map(body => body.id)).to.deep.equal(
+                    [originalMessageId, responseMessageId]);
+            }));
+
+        it('should return an array with bodies matching the specified messages', () =>
+            request(app)
+            .get(`${baseURL}/message/thread/${originalMessageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                const messageRequests = [testMessageObject, responseMessageObject];
+                res.body.forEach((message, index) =>
+                    expect(message).to.deep.include(messageRequests[index]));
+            }));
     });
 
     describe('DELETE /message/delete/:messageId', () => {
