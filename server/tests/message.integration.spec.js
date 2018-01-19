@@ -10,18 +10,14 @@ import chaiDateString from 'chai-date-string';
 import { setTimeout } from 'timers';
 
 import app from '../../index';
-import p from '../../package';
-import config from '../../config/config';
 import {
     Message,
 } from '../../config/sequelize';
+import { auth, baseURL } from './common.integration.js';
 
 chai.use(chaiDatetime);
 chai.use(chaiDateString);
 
-const version = p.version.split('.').shift();
-const baseURL = (version > 0 ? `/api/v${version}` : '/api');
-const auth = config.testToken;
 const auth2 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIyIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiYWRtaW4iOnRydWV9.IXN3UeBdUHLxVLHEk9a7IuY6DVQcnuA8ykxRR6JdC_k';
 const authBad = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXJCYWQiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJhZG1pbiI6dHJ1ZX0.Bht75P-tmchDXssNb58r8mzwe4rHpNZVNzYHQtzfp5k';
 
@@ -432,58 +428,6 @@ describe('Message API:', () => {
                 .expect(httpStatus.OK)
                 .then(res => expect(res.body.readAt).to.be.a.dateString())
         );
-    });
-
-    describe('GET /message/thread/:originalMessageId', () => {
-        let originalMessageId;
-        let responseMessageId;
-
-        const responseMessageObject = {
-            to: ['user1', 'user2'],
-            subject: 'Test Message',
-            message: 'Response post please ignore',
-        };
-
-        before(() => request(app)
-            .post(`${baseURL}/message/send`)
-            .set('Authorization', `Bearer ${auth}`)
-            .send(testMessageObject)
-            .then((message) => {
-                originalMessageId = message.body.originalMessageId;
-                request(app)
-                .post(`${baseURL}/message/reply/${originalMessageId}`)
-                .set('Authorization', `Bearer ${auth}`)
-                .send(responseMessageObject)
-                .then((response) => {
-                    responseMessageId = response.body.id;
-                });
-            }));
-
-        it('should return OK', () => request(app)
-            .get(`${baseURL}/message/thread/${originalMessageId}`)
-            .set('Authorization', `Bearer ${auth}`)
-            .expect(httpStatus.OK));
-
-        it('should return an array of messages with ids in reply order', () => request(app)
-            .get(`${baseURL}/message/thread/${originalMessageId}`)
-            .set('Authorization', `Bearer ${auth}`)
-            .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body.map(body => body.id)).to.deep.equal(
-                    [originalMessageId, responseMessageId]);
-            }));
-
-        it('should return an array with bodies matching the specified messages', () =>
-            request(app)
-            .get(`${baseURL}/message/thread/${originalMessageId}`)
-            .set('Authorization', `Bearer ${auth}`)
-            .expect(httpStatus.OK)
-            .then((res) => {
-                const messageRequests = [testMessageObject, responseMessageObject];
-                res.body.forEach((message, index) =>
-                    expect(message).to.deep.include(messageRequests[index]));
-            }));
     });
 
     describe('DELETE /message/delete/:messageId', () => {
