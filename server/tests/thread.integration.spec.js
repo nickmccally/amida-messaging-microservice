@@ -63,5 +63,12 @@ describe('Thread API:', () => {
                 res.body.forEach((message, index) =>
                     expect(message).to.deep.include(messageRequests[index]));
             }));
+
+        it('should 404 with unfound id', () =>
+            request(app)
+            .get(`${baseURL}/thread/-1`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.NOT_FOUND)
+        );
     });
 });
