@@ -3,7 +3,8 @@ import request from 'supertest';
 import httpStatus from 'http-status';
 import { expect } from 'chai';
 
-import { auth, baseURL, app } from './common.integration.js';
+import { auth, auth2, baseURL, app } from './common.integration.js';
+
 
 const testMessageObject = {
     to: ['user1', 'user2'],
@@ -11,9 +12,16 @@ const testMessageObject = {
     message: 'Test post please ignore',
 };
 
+const inaccessibleMessageObject = {
+    to: ['user007'],
+    subject: 'For your eyes only',
+    message: '*Self destruct*',
+};
+
 describe('Thread API:', () => {
     describe('GET /thread/:originalMessageId', () => {
         let originalMessageId;
+        let inaccessibleMessageId;
         let responseMessageId;
 
         const responseMessageObject = {
@@ -35,7 +43,17 @@ describe('Thread API:', () => {
                 .then((response) => {
                     responseMessageId = response.body.id;
                 });
-            }));
+            })
+            .then(() => {
+                request(app)
+                .post(`${baseURL}/message/send`)
+                .set('Authorization', `Bearer ${auth2}`)
+                .send(inaccessibleMessageObject)
+                .then((message) => {
+                    inaccessibleMessageId = message.body.originalMessageId;
+                });
+            })
+        );
 
         it('should return OK', () => request(app)
             .get(`${baseURL}/thread/${originalMessageId}`)
@@ -66,6 +84,13 @@ describe('Thread API:', () => {
         it('should 404 with unfound id', () =>
             request(app)
             .get(`${baseURL}/thread/-1`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.NOT_FOUND)
+        );
+
+        it('should 404 with inaccessible id', () =>
+            request(app)
+            .get(`${baseURL}/thread/${inaccessibleMessageId}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.NOT_FOUND)
         );

@@ -12,12 +12,11 @@ import { setTimeout } from 'timers';
 import {
     Message,
 } from '../../config/sequelize';
-import { app, auth, baseURL } from './common.integration.js';
+import { app, auth, auth2, baseURL } from './common.integration.js';
 
 chai.use(chaiDatetime);
 chai.use(chaiDateString);
 
-const auth2 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIyIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiYWRtaW4iOnRydWV9.IXN3UeBdUHLxVLHEk9a7IuY6DVQcnuA8ykxRR6JdC_k';
 const authBad = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXJCYWQiLCJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJhZG1pbiI6dHJ1ZX0.Bht75P-tmchDXssNb58r8mzwe4rHpNZVNzYHQtzfp5k';
 
 const testMessageFrom = 'user0';
