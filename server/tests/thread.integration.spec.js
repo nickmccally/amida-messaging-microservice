@@ -36,7 +36,7 @@ describe('Thread API:', () => {
             .send(testMessageObject)
             .then((message) => {
                 originalMessageId = message.body.originalMessageId;
-                request(app)
+                return request(app)
                 .post(`${baseURL}/message/reply/${originalMessageId}`)
                 .set('Authorization', `Bearer ${auth}`)
                 .send(responseMessageObject)
@@ -44,15 +44,14 @@ describe('Thread API:', () => {
                     responseMessageId = response.body.id;
                 });
             })
-            .then(() => {
-                request(app)
+            .then(() => request(app)
                 .post(`${baseURL}/message/send`)
                 .set('Authorization', `Bearer ${auth2}`)
                 .send(inaccessibleMessageObject)
                 .then((message) => {
                     inaccessibleMessageId = message.body.originalMessageId;
-                });
-            })
+                })
+            )
         );
 
         it('should return OK', () => request(app)
