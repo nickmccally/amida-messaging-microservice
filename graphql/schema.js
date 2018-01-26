@@ -76,6 +76,12 @@ const ThreadType = new GraphQLObjectType({
                 parentObject.messages[parentObject.messages.length - 1].createdAt :
                 null),
         },
+        originalMessageId: {
+            type: GraphQLInt,
+            resolve: parentObject => (parentObject.messages.length > 0 ?
+                parentObject.messages[0].originalMessageId :
+                null),
+        },
         messages: {
             type: new GraphQLList(MessageType),
         },
