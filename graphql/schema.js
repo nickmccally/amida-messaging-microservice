@@ -7,9 +7,9 @@ import {
     GraphQLBoolean,
     GraphQLNonNull,
 } from 'graphql';
+import { Op } from 'sequelize';
 
 import db from '../config/sequelize';
-import { Op } from 'sequelize';
 
 const Message = db.Message;
 
