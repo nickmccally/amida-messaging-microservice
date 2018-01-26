@@ -119,6 +119,16 @@ export default new GraphQLSchema({
                     return Message.findAll({ where });
                 },
             },
+            thread: {
+                type: ThreadType,
+                args: {
+                    originalMessageId: { type: new GraphQLNonNull(GraphQLInt) },
+                },
+                resolve(parentObject, { originalMessageId }) {
+                    return Message.findAll({ where: { originalMessageId } })
+                    .then(messages => ({ messages }));
+                },
+            },
         },
     }),
 });
