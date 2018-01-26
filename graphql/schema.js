@@ -106,8 +106,9 @@ export default new GraphQLSchema({
                 args: {
                     unread: { type: GraphQLBoolean },
                     archived: { type: GraphQLBoolean },
+                    received: { type: GraphQLBoolean },
                 },
-                resolve(parentObject, { unread, archived }, { user }) {
+                resolve(parentObject, { unread, archived, received }, { user }) {
                     const where = {};
 
                     if (unread !== undefined) {
@@ -115,6 +116,9 @@ export default new GraphQLSchema({
                     }
                     if (archived !== undefined) {
                         where.isArchived = archived;
+                    }
+                    if (received === true) {
+                        where.to = { [Op.contains]: [user.username] };
                     }
 
                     return userMessageScope(user).findAll({ where });
