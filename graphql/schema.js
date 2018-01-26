@@ -46,6 +46,9 @@ const MessageType = new GraphQLObjectType({
         isArchived: {
             type: GraphQLBoolean,
         },
+        createdAt: {
+            type: GraphQLString,
+        },
     },
 });
 
