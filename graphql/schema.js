@@ -107,8 +107,9 @@ export default new GraphQLSchema({
                     unread: { type: GraphQLBoolean },
                     archived: { type: GraphQLBoolean },
                     received: { type: GraphQLBoolean },
+                    sent: { type: GraphQLBoolean },
                 },
-                resolve(parentObject, { unread, archived, received }, { user }) {
+                resolve(parentObject, { unread, archived, received, sent }, { user }) {
                     const where = {};
 
                     if (unread !== undefined) {
@@ -119,6 +120,9 @@ export default new GraphQLSchema({
                     }
                     if (received === true) {
                         where.to = { [Op.contains]: [user.username] };
+                    }
+                    if (sent === true) {
+                        where.from = user.username;
                     }
 
                     return userMessageScope(user).findAll({ where });
