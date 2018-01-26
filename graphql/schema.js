@@ -15,6 +15,9 @@ const Message = db.Message;
 const MessageType = new GraphQLObjectType({
     name: 'Message',
     fields: {
+        id: {
+            type: GraphQLInt,
+        },
         to: {
             type: new GraphQLList(GraphQLString),
         },
