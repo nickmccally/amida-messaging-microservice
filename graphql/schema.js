@@ -12,6 +12,42 @@ import db from '../config/sequelize';
 
 const Message = db.Message;
 
+const MessageType = new GraphQLObjectType({
+    name: 'Message',
+    fields: {
+        to: {
+            type: new GraphQLList(GraphQLString),
+        },
+        from: {
+            type: GraphQLString,
+        },
+        message: {
+            type: GraphQLString,
+        },
+        subject: {
+            type: GraphQLString,
+        },
+        owner: {
+            type: GraphQLString,
+        },
+        originalMessageId: {
+            type: GraphQLInt,
+        },
+        parentMessageId: {
+            type: GraphQLInt,
+        },
+        readAt: {
+            type: GraphQLString,
+        },
+        isDeleted: {
+            type: GraphQLBoolean,
+        },
+        isArchived: {
+            type: GraphQLBoolean,
+        },
+    },
+});
+
 export default new GraphQLSchema({
     query: new GraphQLObjectType({
         name: 'RootQueryType',
@@ -23,41 +59,7 @@ export default new GraphQLSchema({
                 },
             },
             message: {
-                type: new GraphQLObjectType({
-                    name: 'Message',
-                    fields: {
-                        to: {
-                            type: new GraphQLList(GraphQLString),
-                        },
-                        from: {
-                            type: GraphQLString,
-                        },
-                        message: {
-                            type: GraphQLString,
-                        },
-                        subject: {
-                            type: GraphQLString,
-                        },
-                        owner: {
-                            type: GraphQLString,
-                        },
-                        originalMessageId: {
-                            type: GraphQLInt,
-                        },
-                        parentMessageId: {
-                            type: GraphQLInt,
-                        },
-                        readAt: {
-                            type: GraphQLString,
-                        },
-                        isDeleted: {
-                            type: GraphQLBoolean,
-                        },
-                        isArchived: {
-                            type: GraphQLBoolean,
-                        },
-                    },
-                }),
+                type: MessageType,
                 args: {
                     id: { type: new GraphQLNonNull(GraphQLInt) },
                 },
