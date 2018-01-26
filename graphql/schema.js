@@ -133,8 +133,9 @@ export default new GraphQLSchema({
                 type: new GraphQLList(ThreadType),
                 args: {
                     archived: { type: GraphQLBoolean },
+                    unread: { type: GraphQLBoolean },
                 },
-                resolve(parentObject, { archived }) {
+                resolve(parentObject, { archived, unread }) {
                     return Message.aggregate('originalMessageId', 'DISTINCT', { plain: false })
                     .then(distinctObjects =>
                         Promise.all(distinctObjects.map(({ DISTINCT: originalMessageId }) =>
@@ -149,6 +150,16 @@ export default new GraphQLSchema({
                         } else if (archived === true) {
                             return threads.filter(({ messages }) =>
                                 messages.every(message => message.isArchived));
+                        }
+                        return threads;
+                    })
+                    .then((threads) => {
+                        if (unread === false) {
+                            return threads.filter(({ messages }) =>
+                                messages.every(message => message.readAt !== null));
+                        } else if (unread === true) {
+                            return threads.filter(({ messages }) =>
+                                messages.some(message => message.readAt === null));
                         }
                         return threads;
                     });
