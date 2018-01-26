@@ -131,15 +131,27 @@ export default new GraphQLSchema({
             },
             threads: {
                 type: new GraphQLList(ThreadType),
-                resolve() {
+                args: {
+                    archived: { type: GraphQLBoolean },
+                },
+                resolve(parentObject, { archived }) {
                     return Message.aggregate('originalMessageId', 'DISTINCT', { plain: false })
-                    .then(originalMessageIds =>
-                        originalMessageIds.map(distinct =>
-                            Promise.all(Message.findAll({
-                                where: { originalMessageId: distinct.DISTINCT } }))
-                            .then(messages => ({ messages }))
-                        )
-                    );
+                    .then(distinctObjects =>
+                        Promise.all(distinctObjects.map(({ DISTINCT: originalMessageId }) =>
+                            Message.findAll({ where: { originalMessageId } })))
+                        .then(messageLists =>
+                            messageLists.map(messages => ({ messages })))
+                    )
+                    .then((threads) => {
+                        if (archived === false) {
+                            return threads.filter(({ messages }) =>
+                                messages.some(message => !message.isArchived));
+                        } else if (archived === true) {
+                            return threads.filter(({ messages }) =>
+                                messages.every(message => message.isArchived));
+                        }
+                        return threads;
+                    });
                 },
             },
         },
