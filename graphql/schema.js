@@ -64,8 +64,13 @@ export default new GraphQLSchema({
                     id: { type: new GraphQLNonNull(GraphQLInt) },
                 },
                 resolve(parentObject, args) {
-                    const result = Message.findById(args.id);
-                    return result;
+                    return Message.findById(args.id);
+                },
+            },
+            messages: {
+                type: new GraphQLList(MessageType),
+                resolve() {
+                    return Message.findAll();
                 },
             },
         },
