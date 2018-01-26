@@ -58,7 +58,7 @@ app.use(passport.initialize());
 // mount all routes on /api path
 app.use('/api', routes);
 // mount dedicated graphql path
-app.use('/api/graphql', graphqlHTTP({
+app.use('/api/graphql', (passport.authenticate('jwt', { session: false })), graphqlHTTP({
     schema: GraphQLSchema,
     graphiql: true,
 }));
