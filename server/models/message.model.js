@@ -75,6 +75,14 @@ module.exports = (sequelize, DataTypes) => {
                     },
                 };
             },
+            forUserNonDeleted(user) {
+                return {
+                    where: {
+                        owner: user.username,
+                        isDeleted: false,
+                    },
+                };
+            },
             findAllForUser(user) {
                 return {
                     where: {

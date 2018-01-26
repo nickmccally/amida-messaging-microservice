@@ -259,6 +259,25 @@ describe('Message API:', () => {
             .expect(httpStatus.OK)
 
         );
+
+        it('should be archivable', () => request(app)
+            .put(`${baseURL}/message/archive/${originalMessageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+        );
+
+        it('sender should be able to reply to a message that they archived', () => request(app)
+            .post(`${baseURL}/message/reply/${originalMessageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .send(goodReplyMessageObject)
+            .expect(httpStatus.OK)
+        );
+
+        it('should be about to unarchive', () => request(app)
+            .put(`${baseURL}/message/unarchive/${originalMessageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+        );
     });
 
     // parameters: from, summary, limit
@@ -515,7 +534,7 @@ describe('Message API:', () => {
                     const id = res.body.id;
                     return Message
                         .findById(id)
-                        .then(message => expect(message).to.be.a('null'));
+                        .then((message) => { console.log(message); expect(message).to.be.a('null'); });
                 })
         );
     });
