@@ -8,13 +8,16 @@ import cors from 'cors';
 import httpStatus from 'http-status';
 import expressWinston from 'express-winston';
 import expressValidation from 'express-validation';
+import graphqlHTTP from 'express-graphql';
 import helmet from 'helmet';
 import passport from 'passport';
+
 import winstonInstance from './winston';
 import routes from '../server/routes/index.route';
 import config from './config';
 import APIError from '../server/helpers/APIError';
 import passportConfig from './passport';
+import GraphQLSchema from '../graphql/schema.js';
 
 const app = express();
 
@@ -54,6 +57,11 @@ app.use(passport.initialize());
 
 // mount all routes on /api path
 app.use('/api', routes);
+// mount dedicated graphql path
+app.use('/api/graphql', graphqlHTTP({
+    schema: GraphQLSchema,
+    graphiql: true,
+}));
 
 // if error is not an instanceOf APIError, convert it.
 app.use((err, req, res, next) => {
