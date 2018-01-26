@@ -31,9 +31,6 @@ const MessageType = new GraphQLObjectType({
         subject: {
             type: GraphQLString,
         },
-        owner: {
-            type: GraphQLString,
-        },
         originalMessageId: {
             type: GraphQLInt,
         },
