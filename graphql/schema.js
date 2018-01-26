@@ -52,6 +52,35 @@ const MessageType = new GraphQLObjectType({
     },
 });
 
+const ThreadType = new GraphQLObjectType({
+    name: 'Thread',
+    fields: {
+        count: {
+            type: GraphQLInt,
+            resolve: parentObject => parentObject.messages.length,
+        },
+        subject: {
+            type: GraphQLString,
+            resolve: parentObject => (parentObject.messages.length > 1 ?
+                parentObject.messages[0].subject :
+                null),
+        },
+        from: {
+            type: new GraphQLList(GraphQLString),
+            resolve: parentObject => parentObject.messages.map(message => message.from),
+        },
+        mostRecent: {
+            type: GraphQLString,
+            resolve: parentObject => (parentObject.messages.length > 1 ?
+                parentObject.messages[parentObject.messages.length - 1].createdAt :
+                null),
+        },
+        messages: {
+            type: new GraphQLList(MessageType),
+        },
+    },
+});
+
 export default new GraphQLSchema({
     query: new GraphQLObjectType({
         name: 'RootQueryType',
