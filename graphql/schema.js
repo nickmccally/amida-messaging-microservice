@@ -9,6 +9,7 @@ import {
 } from 'graphql';
 
 import db from '../config/sequelize';
+import { Op } from 'sequelize';
 
 const Message = db.Message;
 
@@ -72,8 +73,21 @@ export default new GraphQLSchema({
             },
             messages: {
                 type: new GraphQLList(MessageType),
-                resolve() {
-                    return Message.findAll();
+                args: {
+                    unread: { type: GraphQLBoolean },
+                    archived: { type: GraphQLBoolean },
+                },
+                resolve(parentObject, { unread, archived }) {
+                    const where = {};
+
+                    if (unread !== undefined) {
+                        where.readAt = unread ? null : { [Op.ne]: null };
+                    }
+                    if (archived !== undefined) {
+                        where.isArchived = archived;
+                    }
+
+                    return Message.findAll({ where });
                 },
             },
         },
