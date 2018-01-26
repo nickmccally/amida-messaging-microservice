@@ -129,6 +129,19 @@ export default new GraphQLSchema({
                     .then(messages => ({ messages }));
                 },
             },
+            threads: {
+                type: new GraphQLList(ThreadType),
+                resolve() {
+                    return Message.aggregate('originalMessageId', 'DISTINCT', { plain: false })
+                    .then(originalMessageIds =>
+                        originalMessageIds.map(distinct =>
+                            Promise.all(Message.findAll({
+                                where: { originalMessageId: distinct.DISTINCT } }))
+                            .then(messages => ({ messages }))
+                        )
+                    );
+                },
+            },
         },
     }),
 });
