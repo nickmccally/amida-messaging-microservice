@@ -12,6 +12,7 @@ import { Op } from 'sequelize';
 import db from '../config/sequelize';
 
 const Message = db.Message;
+const userMessageScope = user => Message.scope({ method: ['forUser', user] });
 
 const MessageType = new GraphQLObjectType({
     name: 'Message',
@@ -96,8 +97,8 @@ export default new GraphQLSchema({
                 args: {
                     id: { type: new GraphQLNonNull(GraphQLInt) },
                 },
-                resolve(parentObject, args) {
-                    return Message.findById(args.id);
+                resolve(parentObject, args, { user }) {
+                    return userMessageScope(user).findById(args.id);
                 },
             },
             messages: {
@@ -106,7 +107,7 @@ export default new GraphQLSchema({
                     unread: { type: GraphQLBoolean },
                     archived: { type: GraphQLBoolean },
                 },
-                resolve(parentObject, { unread, archived }) {
+                resolve(parentObject, { unread, archived }, { user }) {
                     const where = {};
 
                     if (unread !== undefined) {
@@ -116,7 +117,7 @@ export default new GraphQLSchema({
                         where.isArchived = archived;
                     }
 
-                    return Message.findAll({ where });
+                    return userMessageScope(user).findAll({ where });
                 },
             },
             thread: {
@@ -124,8 +125,8 @@ export default new GraphQLSchema({
                 args: {
                     originalMessageId: { type: new GraphQLNonNull(GraphQLInt) },
                 },
-                resolve(parentObject, { originalMessageId }) {
-                    return Message.findAll({ where: { originalMessageId } })
+                resolve(parentObject, { originalMessageId }, { user }) {
+                    return userMessageScope(user).findAll({ where: { originalMessageId } })
                     .then(messages => ({ messages }));
                 },
             },
@@ -135,11 +136,11 @@ export default new GraphQLSchema({
                     archived: { type: GraphQLBoolean },
                     unread: { type: GraphQLBoolean },
                 },
-                resolve(parentObject, { archived, unread }) {
-                    return Message.aggregate('originalMessageId', 'DISTINCT', { plain: false })
+                resolve(parentObject, { archived, unread }, { user }) {
+                    return userMessageScope(user).aggregate('originalMessageId', 'DISTINCT', { plain: false })
                     .then(distinctObjects =>
                         Promise.all(distinctObjects.map(({ DISTINCT: originalMessageId }) =>
-                            Message.findAll({ where: { originalMessageId } })))
+                            userMessageScope(user).findAll({ where: { originalMessageId } })))
                         .then(messageLists =>
                             messageLists.map(messages => ({ messages })))
                     )
