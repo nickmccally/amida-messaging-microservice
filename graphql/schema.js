@@ -62,7 +62,7 @@ const ThreadType = new GraphQLObjectType({
         },
         subject: {
             type: GraphQLString,
-            resolve: parentObject => (parentObject.messages.length > 1 ?
+            resolve: parentObject => (parentObject.messages.length > 0 ?
                 parentObject.messages[0].subject :
                 null),
         },
@@ -72,7 +72,7 @@ const ThreadType = new GraphQLObjectType({
         },
         mostRecent: {
             type: GraphQLString,
-            resolve: parentObject => (parentObject.messages.length > 1 ?
+            resolve: parentObject => (parentObject.messages.length > 0 ?
                 parentObject.messages[parentObject.messages.length - 1].createdAt :
                 null),
         },
