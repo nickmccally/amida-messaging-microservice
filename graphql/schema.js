@@ -5,6 +5,7 @@ import {
     GraphQLInt,
     GraphQLList,
     GraphQLBoolean,
+    GraphQLNonNull,
 } from 'graphql';
 
 import db from '../config/sequelize';
@@ -58,7 +59,7 @@ export default new GraphQLSchema({
                     },
                 }),
                 args: {
-                    id: { type: GraphQLInt },
+                    id: { type: new GraphQLNonNull(GraphQLInt) },
                 },
                 resolve(parentObject, args) {
                     const result = Message.findById(args.id);
