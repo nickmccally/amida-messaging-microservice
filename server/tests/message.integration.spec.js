@@ -260,7 +260,7 @@ describe('Message API:', () => {
 
         );
 
-        it('should be archivable', () => {
+        it('should be able to archive, reply to, then unarchive a message', () => {
             request(app)
             .put(`${baseURL}/message/archive/${originalMessageId}`)
             .set('Authorization', `Bearer ${auth}`)
