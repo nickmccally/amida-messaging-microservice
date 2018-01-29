@@ -279,19 +279,6 @@ describe('Message API:', () => {
                 });
             });
         });
-
-        // it('sender should be able to reply to a message that they archived', () => request(app)
-        //     .post(`${baseURL}/message/reply/${originalMessageId}`)
-        //     .set('Authorization', `Bearer ${auth}`)
-        //     .send(goodReplyMessageObject)
-        //     .expect(httpStatus.OK)
-        // );
-        //
-        // it('should be about to unarchive', () => request(app)
-        //     .put(`${baseURL}/message/unarchive/${originalMessageId}`)
-        //     .set('Authorization', `Bearer ${auth}`)
-        //     .expect(httpStatus.OK)
-        // );
     });
 
     // parameters: from, summary, limit
