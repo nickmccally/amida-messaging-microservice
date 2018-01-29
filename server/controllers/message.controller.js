@@ -174,8 +174,24 @@ function list(req, res) {
         queryObject.limit = req.query.limit;
     }
 
+    if (req.query.offset) {
+        queryObject.offset = req.query.offset;
+    }
+
     if (req.query.summary) {
         queryObject.attributes = ['subject', 'from', 'createdAt'];
+    }
+
+    if (req.query.recieved) {
+        queryObject.where.to = { $contains: req.user.userName };
+    }
+
+    if (req.query.sent) {
+        queryObject.where.from = req.user.userName;
+    }
+
+    if (req.query.unread) {
+        queryObject.where.readAt = null;
     }
 
     if (req.query.archived && req.query.archived === 'true') {

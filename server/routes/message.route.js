@@ -19,6 +19,10 @@ router.route('/reply/:messageId')
  * - limit: number of messages to return
  * - from: filter on message sender by username
  * - summary: boolean, can return a summary version of messages
+ * - received: boolean, filters by recieved messages
+ * - sent: boolean, filters by send messages
+ * - unread: boolean, filters by unread messages
+ * - offset: int, to be used with limit for pagination
  */
 router.route('/list')
     .get(messageCtrl.list);
