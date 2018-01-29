@@ -259,6 +259,26 @@ describe('Message API:', () => {
             .expect(httpStatus.OK)
 
         );
+
+        it('should be able to archive, reply to, then unarchive a message', () => {
+            request(app)
+            .put(`${baseURL}/message/archive/${originalMessageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .end(() => {
+                request(app)
+                .post(`${baseURL}/message/reply/${originalMessageId}`)
+                .set('Authorization', `Bearer ${auth}`)
+                .send(goodReplyMessageObject)
+                .expect(httpStatus.OK)
+                .end(() => {
+                    request(app)
+                    .put(`${baseURL}/message/unarchive/${originalMessageId}`)
+                    .set('Authorization', `Bearer ${auth}`)
+                    .expect(httpStatus.OK);
+                });
+            });
+        });
     });
 
     // parameters: from, summary, limit
