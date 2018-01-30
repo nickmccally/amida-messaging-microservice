@@ -42,6 +42,16 @@ describe('Thread API:', () => {
                 .send(responseMessageObject)
                 .then((response) => {
                     responseMessageId = response.body.id;
+                    return request(app)
+                    .post(`${baseURL}/message/reply/${responseMessageId}`)
+                    .set('Authorization', `Bearer ${auth}`)
+                    .send(responseMessageObject)
+                    .expect(httpStatus.OK)
+                    .then(deleteResponse => request(app)
+                        .delete(`${baseURL}/message/delete/${deleteResponse.body.id}`)
+                        .set('Authorization', `Bearer ${auth}`)
+                        .send()
+                        .expect(httpStatus.OK));
                 });
             })
             .then(() => request(app)
