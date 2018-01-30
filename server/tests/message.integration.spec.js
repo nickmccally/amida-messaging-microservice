@@ -359,8 +359,8 @@ describe('Message API:', () => {
             })
         );
 
-        it('has an option to filter by recieved messages', () => request(app)
-            .get(`${baseURL}/message/list?recieved=true`)
+        it('has an option to filter by received messages', () => request(app)
+            .get(`${baseURL}/message/list?received=true`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
             .then((res) => {

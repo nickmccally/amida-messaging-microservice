@@ -182,7 +182,7 @@ function list(req, res) {
         queryObject.attributes = ['subject', 'from', 'createdAt'];
     }
 
-    if (req.query.recieved) {
+    if (req.query.received) {
         queryObject.where.to = { $contains: req.user.userName };
     }
 
