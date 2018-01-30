@@ -43,11 +43,11 @@ router.route('/archive/:messageId')
 router.route('/unarchive/:messageId')
     .put(messageCtrl.unarchive);
 
-router.route('/removeReadAt/:messageId')
-    .get(messageCtrl.removeReadAt);
+router.route('/markAsUnread/:messageId')
+    .put(messageCtrl.markAsUnread);
 
-router.route('/setReadAt/:messageId/:newTime')
-    .get(messageCtrl.setReadAt);
+router.route('/markAsRead/:messageId')
+    .put(messageCtrl.markAsRead);
 
 /** Load message when API with route parameter is hit */
 router.param('messageId', messageCtrl.load);

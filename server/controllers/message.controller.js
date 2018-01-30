@@ -247,7 +247,7 @@ function unarchive(req, res) {
  * sets readAt of message with messageId to null
  * @returns {Message}
  */
-function removeReadAt(req, res) {
+function markAsUnread(req, res) {
     if (req.message) {
         req.message.update({ readAt: null });
     }
@@ -256,14 +256,13 @@ function removeReadAt(req, res) {
 
 /**
  * Set readAt timestamp
- * sets readAt of message with the messageId to newTime
+ * sets readAt of message to the current time
  * @returns {Message}
  */
-function setReadAt(req, res) {
-    const newTime = req.params.newTime;
+function markAsRead(req, res) {
     if (req.message) {
         req.message.update({
-            readAt: newTime,
+            readAt: new Date(),
         });
     }
     return res.send(req.message);
@@ -279,6 +278,6 @@ export default {
     load,
     archive,
     unarchive,
-    removeReadAt,
-    setReadAt,
+    markAsUnread,
+    markAsRead,
 };
