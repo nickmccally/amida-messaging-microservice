@@ -247,11 +247,12 @@ function unarchive(req, res) {
  * sets readAt of message with messageId to null
  * @returns {Message}
  */
-function markAsUnread(req, res) {
+function markAsUnread(req, res, next) {
     if (req.message) {
-        req.message.update({ readAt: null });
+        return req.message.update({ readAt: null })
+        .then(response => res.send(response));
     }
-    return res.send(req.message);
+    return next();
 }
 
 /**
