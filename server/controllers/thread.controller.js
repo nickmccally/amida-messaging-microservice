@@ -5,7 +5,7 @@ import APIError from '../helpers/APIError';
 const Message = db.Message;
 
 function get(req, res, next) {
-    Message.scope({ method: ['findAllForUser', req.user] })
+    Message.scope({ method: ['forUser', req.user] })
         .findAll({
             where: {
                 originalMessageId: req.params.originalMessageId,
