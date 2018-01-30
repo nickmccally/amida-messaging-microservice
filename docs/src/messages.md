@@ -1,6 +1,6 @@
 # Group Messages
 ## Send a message [/message/send]
-### Create new Patient [POST]
+### Create new Message [POST]
 Send a message to any number of recipients.
 
 + Parameters
