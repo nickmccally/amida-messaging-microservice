@@ -56,6 +56,9 @@ DEBUG=amida-messaging-microservice:* yarn start
 ```
 
 Tests:
+
+Create a JWT with the username value 'user0' and set `TEST_TOKEN={token}` in your .env file or an evironment variable. You can easily create a token using the amida-auth-microservice
+
 ```sh
 # Run tests written in ES6
 yarn test
