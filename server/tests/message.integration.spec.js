@@ -496,6 +496,8 @@ describe('Message API:', () => {
 
     describe('PUT /message/archive/:messageId', () => {
         let messageId;
+        let archivedMessageId;
+        let deletedMessageId;
 
         before(() => Message
                       .destroy({
@@ -510,6 +512,26 @@ describe('Message API:', () => {
                     messageId = message.body.id;
                     return;
                 }))
+                .then(() => request(app)
+                    .post(`${baseURL}/message/send`)
+                    .set('Authorization', `Bearer ${auth}`)
+                    .send(testMessageObject)
+                    .expect(httpStatus.OK)
+                    .then((messageToArchive) => {
+                        archivedMessageId = messageToArchive.body.id;
+                    }))
+                .then(() => request(app)
+                    .post(`${baseURL}/message/send`)
+                    .set('Authorization', `Bearer ${auth}`)
+                    .send(testMessageObject)
+                    .expect(httpStatus.OK)
+                    .then((messageToArchiveAndDelete) => {
+                        deletedMessageId = messageToArchiveAndDelete.body.id;
+                        return request(app)
+                        .delete(`${baseURL}/message/delete/${deletedMessageId}`)
+                        .set('Authorization', `Bearer ${auth}`)
+                        .expect(httpStatus.OK);
+                    }))
         );
 
         it('should archive and return message', () =>
@@ -542,7 +564,7 @@ describe('Message API:', () => {
         );
 
         it('should unarchive and return message', () => request(app)
-            .put(`${baseURL}/message/unarchive/${messageId}`)
+            .put(`${baseURL}/message/unarchive/${archivedMessageId}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
             .then((res) => {
@@ -553,6 +575,11 @@ describe('Message API:', () => {
                         .then(message => expect(message.isArchived).to.equal(false));
             })
         );
+
+        it('should not unarchive deleted messages', () => request(app)
+            .put(`${baseURL}/message/unarchive/${deletedMessageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.NOT_FOUND));
 
         after(() => Message
             .destroy({
