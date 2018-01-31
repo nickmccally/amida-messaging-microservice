@@ -386,6 +386,7 @@ describe('Message API:', () => {
             .expect(httpStatus.OK)
             .then((res) => {
                 expect(res.body).to.be.an('array');
+                expect(res.body.length).to.not.equal(0);
                 expect(() => {
                     let i;
                     for (i = 0; i < res.body.length; i++) { // eslint-disable-line no-plusplus
