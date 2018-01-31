@@ -335,6 +335,7 @@ describe('Message API:', () => {
             .expect(httpStatus.OK)
             .then((res) => {
                 expect(res.body).to.be.an('array');
+                expect(res.body.length).to.not.equal(0);
                 expect(res.body[0].from).to.equal(testMessageArray[0].from);
                 expect(res.body[0].to).to.deep.equal(testMessageArray[0].to);
                 return;
@@ -347,6 +348,7 @@ describe('Message API:', () => {
             .expect(httpStatus.OK)
             .then((res) => {
                 expect(res.body).to.be.an('array');
+                expect(res.body.length).to.not.equal(0);
                 expect(() => {
                     let i;
                     for (i = 0; i < res.body.length; i++) { // eslint-disable-line no-plusplus
@@ -365,6 +367,7 @@ describe('Message API:', () => {
             .expect(httpStatus.OK)
             .then((res) => {
                 expect(res.body).to.be.an('array');
+                expect(res.body.length).to.not.equal(0);
                 expect(() => {
                     let i;
                     for (i = 0; i < res.body.length; i++) { // eslint-disable-line no-plusplus

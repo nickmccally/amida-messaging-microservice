@@ -183,11 +183,11 @@ function list(req, res) {
     }
 
     if (req.query.received) {
-        queryObject.where.to = { $contains: req.user.userName };
+        queryObject.where.to = { $contains: [req.user.username] };
     }
 
     if (req.query.sent) {
-        queryObject.where.from = req.user.userName;
+        queryObject.where.from = req.user.username;
     }
 
     if (req.query.unread) {
