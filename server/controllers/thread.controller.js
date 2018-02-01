@@ -23,6 +23,62 @@ function get(req, res, next) {
         .catch(next);
 }
 
+function findFirstUnreadMessageId(thread, allMessages) {
+    let minUnreadCreatedDate;
+    let minUnreadMessageId;
+    let j;
+    for (j = 0; j < allMessages.length; j++) { // eslint-disable-line no-plusplus
+        if (allMessages[j].originalMessageId !== thread.originalMessageId) {
+            continue; // eslint-disable-line no-continue
+        }
+        if (minUnreadMessageId) {
+            if (minUnreadCreatedDate > allMessages[j].createdAt) {
+                minUnreadCreatedDate = allMessages[j].createdAt;
+                minUnreadMessageId = allMessages[j].id;
+            }
+        } else {
+            minUnreadMessageId = allMessages[j].id;
+        }
+    }
+    return minUnreadMessageId;
+}
+
+function findLastReadMessageId(thread, allMessages) {
+    let maxCreatedDate;
+    let maxCreatedMessageId;
+    let j;
+    for (j = 0; j < allMessages.length; j++) { // eslint-disable-line no-plusplus
+        if (allMessages[j].originalMessageId !== thread.originalMessageId) {
+            continue; // eslint-disable-line no-continue
+        }
+        if (maxCreatedMessageId) {
+            if (maxCreatedDate < allMessages[j].readAt) {
+                maxCreatedDate = allMessages[j].readAt;
+                maxCreatedMessageId = allMessages[j].id;
+            }
+        } else {
+            maxCreatedMessageId = allMessages[j].id;
+        }
+    }
+    return maxCreatedMessageId;
+}
+
+function findFirstSubjectText(thread, allMessages) {
+    let minSubjectDate;
+    let minSubject;
+    let j;
+    for (j = 0; j < allMessages.length; j++) { // eslint-disable-line no-plusplus
+        if (allMessages[j].originalMessageId !== thread.originalMessageId) {
+            continue;  // eslint-disable-line no-continue
+        }
+        if (!minSubjectDate || minSubjectDate > allMessages[j].createdAt) {
+            minSubjectDate = allMessages[j].createdAt;
+            minSubject = allMessages[j].subject;
+        }
+    }
+    return minSubject;
+}
+
 function list(req, res, next) {
     const queryObject = {
         raw: true,
@@ -54,31 +110,17 @@ function list(req, res, next) {
             .then((allMessages) => {
                 const threads = threadsResponse;
                 let i;
-                let j;
-                let maxReadDate;
-                let minUnreadCreatedDate;
-                let minSubjectDate;
                 for (i = 0; i < threads.length; i++) { // eslint-disable-line no-plusplus
                     threads[i].count = parseInt(threads[i].count, 10);
-                    for (j = 0; j < allMessages.length; j++) { // eslint-disable-line no-plusplus
-                        if (threads[i].unread) {
-                            if (threads[i].refMessageId) {
-                                if (minUnreadCreatedDate > allMessages[j].createdAt) {
-                                    minUnreadCreatedDate = allMessages[j].createdAt;
-                                    threads[i].refMessageId = allMessages[j].id;
-                                }
-                            } else { threads[i].refMessageId = allMessages[j].id; }
-                        } else if (threads[i].refMessageId) {
-                            if (maxReadDate < allMessages[j].readAt) {
-                                maxReadDate = allMessages[j].readAt;
-                                threads[i].refMessageId = allMessages[j].id;
-                            }
-                        } else { threads[i].refMessageId = allMessages[j].id; }
-                        if (!minSubjectDate || minSubjectDate > allMessages[j].createdAt) {
-                            minSubjectDate = allMessages[j].createdAt;
-                            threads[i].subject = allMessages[j].subject;
-                        }
+                    if (threads[i].unread) {
+                        threads[i].refMessageId
+                          = findFirstUnreadMessageId(threads[i], allMessages);
+                    } else {
+                        threads[i].refMessageId
+                          = findLastReadMessageId(threads[i], allMessages);
                     }
+                    threads[i].subject
+                      = findFirstSubjectText(threads[i], allMessages);
                 }
                 res.send(threads);
             });
