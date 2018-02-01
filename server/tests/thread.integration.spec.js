@@ -19,6 +19,53 @@ const inaccessibleMessageObject = {
 };
 
 describe('Thread API:', () => {
+    describe('GET /thread/', () => {
+        let originalMessageId;
+        let lastCreatedAt;
+
+        const responseMessageObject = {
+            to: ['user1', 'user2'],
+            subject: 'Test Message',
+            message: 'Response post please ignore',
+        };
+
+        before(() => request(app)
+            .post(`${baseURL}/message/send`)
+            .set('Authorization', `Bearer ${auth}`)
+            .send(testMessageObject)
+            .then((message) => {
+                originalMessageId = message.body.originalMessageId;
+                return request(app)
+                .post(`${baseURL}/message/reply/${originalMessageId}`)
+                .set('Authorization', `Bearer ${auth}`)
+                .send(responseMessageObject)
+                .then((response) => {
+                    lastCreatedAt = response.body.createdAt;
+                });
+            })
+            .then(() => request(app)
+                .post(`${baseURL}/message/send`)
+                .set('Authorization', `Bearer ${auth2}`)
+                .send(inaccessibleMessageObject)
+            )
+        );
+
+        it('should return tread summaries', () => request(app)
+            .get(`${baseURL}/thread`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.be.an('array');
+                expect(res.body.length).to.equal(1);
+                expect(res.body[0].originalMessageId).to.equal(originalMessageId);
+                expect(res.body[0].mostRecent).to.equal(lastCreatedAt);
+                expect(res.body[0].unread).to.equal(false);
+                expect(res.body[0].count).to.equal(2);
+                expect(res.body[0].subject).to.equal(testMessageObject.subject);
+            })
+        );
+    });
+
     describe('GET /thread/:originalMessageId', () => {
         let originalMessageId;
         let inaccessibleMessageId;
