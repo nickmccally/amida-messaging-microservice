@@ -90,17 +90,17 @@ function list(req, res, next) {
     }
 
     if (req.query.offset) {
-        queryObject.limit = req.query.limit;
+        queryObject.offset = req.query.offset;
     }
 
-    const senders = [Sequelize.fn('ARRAY_AGG', Sequelize.fn('DISTINCT', Sequelize.col('from'))), 'senders'];
+    const from = [Sequelize.fn('ARRAY_AGG', Sequelize.fn('DISTINCT', Sequelize.col('from'))), 'from'];
     const originalMessageId = 'originalMessageId';
     const mostRecent = [Sequelize.fn('MAX', Sequelize.col('createdAt')), 'mostRecent'];
     const count = [Sequelize.fn('COUNT', Sequelize.col('id')), 'count'];
-    const archived = [Sequelize.fn('bool_or', Sequelize.col('isArchived')), 'archived'];
-    const unread = [Sequelize.fn('bool_and', (Sequelize.literal('CASE WHEN "readAt" IS NULL THEN true ELSE false END'))), 'unread'];
+    const isArchived = [Sequelize.fn('bool_and', Sequelize.col('isArchived')), 'isArchived'];
+    const unread = [Sequelize.fn('bool_or', (Sequelize.literal('CASE WHEN "readAt" IS NULL THEN true ELSE false END'))), 'unread'];
     queryObject.group = 'originalMessageId';
-    queryObject.attributes = [senders, originalMessageId, mostRecent, count, archived, unread];
+    queryObject.attributes = [from, originalMessageId, mostRecent, count, isArchived, unread];
 
     Message.scope({ method: ['findAllForUser', req.user] })
         .findAll(queryObject)
