@@ -166,8 +166,24 @@ function list(req, res) {
         queryObject.limit = req.query.limit;
     }
 
+    if (req.query.offset) {
+        queryObject.offset = req.query.offset;
+    }
+
     if (req.query.summary) {
         queryObject.attributes = ['subject', 'from', 'createdAt'];
+    }
+
+    if (req.query.received) {
+        queryObject.where.to = { $contains: [req.user.username] };
+    }
+
+    if (req.query.sent) {
+        queryObject.where.from = req.user.username;
+    }
+
+    if (req.query.unread) {
+        queryObject.where.readAt = null;
     }
 
     if (req.query.archived && req.query.archived === 'true') {
@@ -227,4 +243,43 @@ function unarchive(req, res) {
     return res.send(req.message);
 }
 
-export default { send, reply, get, list, count, remove, load, archive, unarchive };
+/**
+ * Remove readAt timestamp
+ * sets readAt of message with messageId to null
+ * @returns {Message}
+ */
+function markAsUnread(req, res, next) {
+    if (req.message) {
+        return req.message.update({ readAt: null })
+        .then(response => res.send(response));
+    }
+    return next();
+}
+
+/**
+ * Set readAt timestamp
+ * sets readAt of message to the current time
+ * @returns {Message}
+ */
+function markAsRead(req, res) {
+    if (req.message) {
+        req.message.update({
+            readAt: new Date(),
+        });
+    }
+    return res.send(req.message);
+}
+
+export default {
+    send,
+    reply,
+    get,
+    list,
+    count,
+    remove,
+    load,
+    archive,
+    unarchive,
+    markAsUnread,
+    markAsRead,
+};
