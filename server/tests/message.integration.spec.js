@@ -630,4 +630,81 @@ describe('Message API:', () => {
             })
         );
     });
+
+    describe('PUT /message/markAsUnread/:messageId', () => {
+        let messageId;
+
+        before(() => Message
+                      .destroy({
+                          where: {},
+                          truncate: true,
+                      }).then(() => request(app)
+                .post(`${baseURL}/message/send`)
+                .set('Authorization', `Bearer ${auth}`)
+                .send(testMessageObject)
+                .expect(httpStatus.OK)
+                .then((message) => {
+                    messageId = message.body.id;
+                    expect(message.body.readAt).is.a('string');
+                })));
+
+        it('should mark a message as unread', () => request(app)
+            .get(`${baseURL}/message/get/${messageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((message) => {
+                expect(message.body.readAt).is.a('string');
+            })
+            .then(() => request(app)
+                .put(`${baseURL}/message/markAsUnread/${messageId}`)
+                .set('Authorization', `Bearer ${auth}`)
+                .expect(httpStatus.OK)
+                .then((message) => {
+                    expect(message.body.readAt).is.a('null');
+                })));
+
+        it('should 404 if not found', () => request(app)
+            .put(`${baseURL}/messages/markAsRead/-1`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.NOT_FOUND));
+    });
+
+    describe('PUT /message/markAsRead/:messageId', () => {
+        let messageId;
+
+        before(() => Message
+                      .destroy({
+                          where: {},
+                          truncate: true,
+                      }).then(() => request(app)
+                .post(`${baseURL}/message/send`)
+                .set('Authorization', `Bearer ${auth}`)
+                .send(testMessageObject)
+                .expect(httpStatus.OK)
+                .then((message) => {
+                    messageId = message.body.id;
+                    expect(message.body.readAt).is.a('string');
+                }))
+                .then(() => request(app)
+                    .put(`${baseURL}/message/markAsUnread/${messageId}`)
+                    .set('Authorization', `Bearer ${auth}`)
+                    .expect(httpStatus.OK)
+                    .then((message) => {
+                        expect(message.body.readAt).is.a('null');
+                    }))
+        );
+
+        it('should mark a message as read', () => request(app)
+            .put(`${baseURL}/message/markAsRead/${messageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((message) => {
+                expect(message.body.readAt).is.a('string');
+            }));
+
+        it('should 404 if not found', () => request(app)
+            .put(`${baseURL}/messages/markAsRead/-1`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.NOT_FOUND));
+    });
 });

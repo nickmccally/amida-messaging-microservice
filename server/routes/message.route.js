@@ -47,6 +47,12 @@ router.route('/archive/:messageId')
 router.route('/unarchive/:messageId')
     .put(messageCtrl.unarchive);
 
+router.route('/markAsUnread/:messageId')
+    .put(messageCtrl.markAsUnread);
+
+router.route('/markAsRead/:messageId')
+    .put(messageCtrl.markAsRead);
+
 /** Load message when API with route parameter is hit */
 router.param('messageId', messageCtrl.load);
 
