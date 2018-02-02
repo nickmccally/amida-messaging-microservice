@@ -3,6 +3,7 @@ import db from '../../config/sequelize';
 import APIError from '../helpers/APIError';
 
 const Message = db.Message;
+const Thread = db.Thread;
 
 const useUnscoped = (url) => {
     const unscopedRoutes = ['/unarchive/', '/delete/'];
@@ -69,32 +70,37 @@ function send(req, res, next) {
     const messageArray = [];
     const newTime = new Date();
     // Saves an instance where the sender is owner and readAt=current time
-    Message.create({
-        to: req.body.to,
-        from: req.user.username,
-        subject: req.body.subject,
-        message: req.body.message,
-        owner: req.user.username,
-        createdAt: newTime,
-        readAt: newTime,
-    }).then(msg => msg.update({ originalMessageId: msg.id }))
-      .then((msg) => {
-          // Saves separate instance where each recipient is the owner
-          for (let i = 0; i < req.body.to.length; i += 1) {
-              messageArray.push({
-                  to: req.body.to,
-                  from: req.user.username,
-                  subject: req.body.subject,
-                  message: req.body.message,
-                  owner: req.body.to[i],
-                  createdAt: new Date(),
-                  originalMessageId: msg.id,
-              });
-          }
-          Message.bulkCreate(messageArray)
-            .then(() => res.json(msg))
-            .catch(e => next(e));
-      }).catch(e => next(e));
+    Thread.create().then((thread) => {
+      Message.create({
+          to: req.body.to,
+          from: req.user.username,
+          subject: req.body.subject,
+          message: req.body.message,
+          owner: req.user.username,
+          createdAt: newTime,
+          readAt: newTime,
+          threadId: thread.id,
+      }).then(msg => msg.update({ originalMessageId: msg.id }))
+        .then((msg) => {
+            // Saves separate instance where each recipient is the owner
+            for (let i = 0; i < req.body.to.length; i += 1) {
+                messageArray.push({
+                    to: req.body.to,
+                    from: req.user.username,
+                    subject: req.body.subject,
+                    message: req.body.message,
+                    owner: req.body.to[i],
+                    createdAt: new Date(),
+                    originalMessageId: msg.id,
+                    threadId: thread.id
+                });
+            }
+            Message.bulkCreate(messageArray)
+              .then(() => res.json(msg))
+              .catch(e => next(e));
+        }).catch(e => next(e));
+    })
+
 }
 
 /**
@@ -133,6 +139,7 @@ function reply(req, res, next) {
             createdAt: newTime,
             isDeleted: false,
             parentMessageId: messageId,
+            threadId: parentMessage.threadId,
             originalMessageId: parentMessage.originalMessageId,
         });
     }
@@ -150,6 +157,7 @@ function reply(req, res, next) {
         readAt: newTime,
         isDeleted: false,
         parentMessageId: messageId,
+        threadId: parentMessage.threadId,
         originalMessageId: parentMessage.originalMessageId,
     });
 
@@ -222,7 +230,7 @@ function remove(req, res) {
 function archive(req, res) {
     if (req.message) {
         req.message.update({
-            isArchived: true,
+            isArchived: true
         });
     }
     return res.send(req.message);

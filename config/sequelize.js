@@ -23,6 +23,7 @@ const sequelize = new Sequelize(config.postgres.db,
     });
 
 db.Message = sequelize.import('../server/models/message.model');
+db.Thread = sequelize.import('../server/models/thread.model');
 
 // assign the sequelize variables to the db object and returning the db.
 module.exports = _.extend({
