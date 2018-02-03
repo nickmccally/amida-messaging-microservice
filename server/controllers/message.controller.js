@@ -162,27 +162,27 @@ function list(req, res) {
         queryObject.where = { ...queryObject.where, ...whereObject };
     }
 
-    if (req.query.limit) {
+    if (req.query.limit !== undefined) {
         queryObject.limit = req.query.limit;
     }
 
-    if (req.query.offset) {
+    if (req.query.offset !== undefined) {
         queryObject.offset = req.query.offset;
     }
 
-    if (req.query.summary) {
+    if (req.query.summary === 'true') {
         queryObject.attributes = ['subject', 'from', 'createdAt'];
     }
 
-    if (req.query.received) {
+    if (req.query.received === 'true') {
         queryObject.where.to = { $contains: [req.user.username] };
     }
 
-    if (req.query.sent) {
+    if (req.query.sent === 'true') {
         queryObject.where.from = req.user.username;
     }
 
-    if (req.query.unread) {
+    if (req.query.unread === 'true') {
         queryObject.where.readAt = null;
     }
 
