@@ -186,19 +186,14 @@ function list(req, res) {
         queryObject.where.readAt = null;
     }
 
-    if (req.query.archived && req.query.archived === 'true') {
-        queryObject.where.isArchived = true;
-        queryObject.where.isDeleted = false;
-        queryObject.where.owner = req.user.username;
-        Message
-            .unscoped().findAll(queryObject)
-            .then(results => res.send(results));
-    } else {
-        Message
-          .scope({ method: ['forUser', req.user] })
-          .findAll(queryObject)
-          .then(results => res.send(results));
+    if (req.query.archived !== undefined) {
+        queryObject.where.isArchived = req.query.archived === 'true';
     }
+
+    Message
+        .scope({ method: ['forUser', req.user] })
+        .findAll(queryObject)
+        .then(results => res.send(results));
 }
 
 function count() {}
