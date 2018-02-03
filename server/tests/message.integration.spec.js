@@ -31,13 +31,14 @@ const fromArray = ['user0', 'user1', 'user2', 'user3'];
 const MessageUnscoped = Message.unscoped();
 // 4 senders send message to 4 recipients each
 fromArray.forEach((receiver) => {
-    fromArray.forEach((sender) => {
+    fromArray.forEach((sender, index) => {
         testMessageArray.push({
             to: fromArray,
             from: sender,
             subject: 'Test Message',
             message: 'Test post please ignore',
             owner: receiver,
+            isArchived: index < 1,
         });
     });
 });
@@ -410,6 +411,28 @@ describe('Message API:', () => {
                     }
                 }).to.not.throw();
                 return;
+            })
+        );
+
+        it('has an option to filter by archived messages', () => request(app)
+            .get(`${baseURL}/message/list?archived=true`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.be.an('array');
+                expect(res.body.length).to.equal(1);
+                expect(res.body[0].isArchived).to.equal(true);
+            })
+        );
+
+        it('has an option to filter by unarchived messages', () => request(app)
+            .get(`${baseURL}/message/list?archived=false`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.be.an('array');
+                expect(res.body.length).to.equal(3);
+                res.body.forEach(message => expect(message.isArchived).to.equal(false));
             })
         );
 
