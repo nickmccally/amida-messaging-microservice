@@ -23,7 +23,7 @@ const inaccessibleMessageObject = {
 
 const now = new Date();
 
-const boilerPlate = {
+const threadMessageTemplate = {
     subject: 'subject',
     message: 'message',
     isDeleted: false,
@@ -100,7 +100,7 @@ const getThreadsTestObject = [
         parentMessageId: null,
         isDeleted: true,
     },
-].map(message => Object.assign({}, boilerPlate, message));
+].map(message => Object.assign({}, threadMessageTemplate, message));
 
 describe('Thread API:', () => {
     describe('GET /thread/', () => {
