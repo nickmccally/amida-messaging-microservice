@@ -6,7 +6,7 @@ import APIError from '../helpers/APIError';
 const Message = db.Message;
 
 function get(req, res, next) {
-    Message.scope({ method: ['findAllForUser', req.user] })
+    Message.scope({ method: ['forUser', req.user] })
         .findAll({
             where: {
                 originalMessageId: req.params.originalMessageId,
@@ -102,10 +102,10 @@ function list(req, res, next) {
     queryObject.group = 'originalMessageId';
     queryObject.attributes = [from, originalMessageId, mostRecent, count, isArchived, unread];
 
-    Message.scope({ method: ['findAllForUser', req.user] })
+    Message.scope({ method: ['forUser', req.user] })
         .findAll(queryObject)
         .then((threadsResponse) => {
-            Message.scope({ method: ['findAllForUser', req.user] })
+            Message.scope({ method: ['forUser', req.user] })
             .findAll({ raw: true })
             .then((allMessages) => {
                 const threads = threadsResponse;
