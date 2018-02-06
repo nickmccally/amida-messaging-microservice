@@ -178,6 +178,19 @@ describe('Thread API:', () => {
             })
         );
 
+        it('should produce a correct messageIds value', () => request(app)
+            .get(`${baseURL}/thread`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.be.an('array');
+                const messageIds = [[1], [2, 3], [4, 5], [6, 7], [8, 9]];
+                res.body.forEach((thread, index) => {
+                    expect(thread.messageIds, `messageIds[${index}]`).to.deep.equal(messageIds[index]);
+                });
+            })
+        );
+
         it('should support limit parameter', () => request(app)
             .get(`${baseURL}/thread?limit=1`)
             .set('Authorization', `Bearer ${auth}`)
