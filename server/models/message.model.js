@@ -1,7 +1,6 @@
 /**
  * Message Schema
  */
-import Thread from './thread.model';
 module.exports = (sequelize, DataTypes) => {
     const Message = sequelize.define('Message', {
         id: {
@@ -22,10 +21,6 @@ module.exports = (sequelize, DataTypes) => {
         originalMessageId: {
             type: DataTypes.INTEGER,
             allowNull: true,
-        },
-        threadId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
         },
         parentMessageId: {
             type: DataTypes.INTEGER,

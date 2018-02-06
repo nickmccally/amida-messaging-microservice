@@ -1,19 +1,20 @@
 /**
- * Thread Schema
+ * UserThread Schema
  */
 module.exports = (sequelize, DataTypes) => {
-    const Thread = sequelize.define('Thread', {
+    const UserThread = sequelize.define('UserThread', {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true,
         },
-        topic: {
-            type: DataTypes.STRING,
+        lastMessageRead: {
+            type: DataTypes.BOOLEAN,
             allowNull: false,
+            defaultValue: false,
         }
     });
     // Class methods
 
-    return Thread;
+    return UserThread;
 };
