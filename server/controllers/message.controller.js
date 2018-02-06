@@ -162,43 +162,38 @@ function list(req, res) {
         queryObject.where = { ...queryObject.where, ...whereObject };
     }
 
-    if (req.query.limit) {
+    if (req.query.limit !== undefined) {
         queryObject.limit = req.query.limit;
     }
 
-    if (req.query.offset) {
+    if (req.query.offset !== undefined) {
         queryObject.offset = req.query.offset;
     }
 
-    if (req.query.summary) {
+    if (req.query.summary === 'true') {
         queryObject.attributes = ['subject', 'from', 'createdAt'];
     }
 
-    if (req.query.received) {
+    if (req.query.received === 'true') {
         queryObject.where.to = { $contains: [req.user.username] };
     }
 
-    if (req.query.sent) {
+    if (req.query.sent === 'true') {
         queryObject.where.from = req.user.username;
     }
 
-    if (req.query.unread) {
+    if (req.query.unread === 'true') {
         queryObject.where.readAt = null;
     }
 
-    if (req.query.archived && req.query.archived === 'true') {
-        queryObject.where.isArchived = true;
-        queryObject.where.isDeleted = false;
-        queryObject.where.owner = req.user.username;
-        Message
-            .unscoped().findAll(queryObject)
-            .then(results => res.send(results));
-    } else {
-        Message
-          .scope({ method: ['forUser', req.user] })
-          .findAll(queryObject)
-          .then(results => res.send(results));
+    if (req.query.archived !== undefined) {
+        queryObject.where.isArchived = req.query.archived === 'true';
     }
+
+    Message
+        .scope({ method: ['forUser', req.user] })
+        .findAll(queryObject)
+        .then(results => res.send(results));
 }
 
 function count() {}
