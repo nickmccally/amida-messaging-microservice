@@ -93,6 +93,13 @@ function list(req, res, next) {
         queryObject.offset = req.query.offset;
     }
 
+    if (req.query.archived !== undefined) {
+        queryObject.having =
+            Sequelize.where(Sequelize.fn('bool_and', Sequelize.col('isArchived')),
+            { $eq: req.query.archived }
+        );
+    }
+
     const from = [Sequelize.fn('ARRAY_AGG', Sequelize.fn('DISTINCT', Sequelize.col('from'))), 'from'];
     const originalMessageId = 'originalMessageId';
     const mostRecent = [Sequelize.fn('MAX', Sequelize.col('createdAt')), 'mostRecent'];

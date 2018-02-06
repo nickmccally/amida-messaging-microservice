@@ -197,6 +197,39 @@ describe('Thread API:', () => {
                 expect(res.body[0].originalMessageId).to.equal(2);
             })
         );
+
+        it('should support archived=true parameter', () => request(app)
+            .get(`${baseURL}/thread?archived=true`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.have.length(1);
+                expect(res.body[0].isArchived).to.equal(true);
+            })
+        );
+
+        it('should support archived=false parameter', () => request(app)
+            .get(`${baseURL}/thread?archived=false`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.have.length(4);
+                expect(res.body[0].isArchived).to.equal(false);
+                expect(res.body[1].isArchived).to.equal(false);
+                expect(res.body[2].isArchived).to.equal(false);
+                expect(res.body[3].isArchived).to.equal(false);
+            })
+        );
+
+        it('should offset and limit archive-filtered results', () => request(app)
+            .get(`${baseURL}/thread?archived=false&offset=1&limit=1`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.have.length(1);
+                expect(res.body[0].originalMessageId).to.equal(2);
+            })
+        );
     });
 
     describe('GET /thread/:originalMessageId', () => {
