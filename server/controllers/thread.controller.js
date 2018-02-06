@@ -106,8 +106,10 @@ function list(req, res, next) {
     const count = [Sequelize.fn('COUNT', Sequelize.col('id')), 'count'];
     const isArchived = [Sequelize.fn('bool_and', Sequelize.col('isArchived')), 'isArchived'];
     const unread = [Sequelize.fn('bool_or', (Sequelize.literal('CASE WHEN "readAt" IS NULL THEN true ELSE false END'))), 'unread'];
+    const messageIds = [Sequelize.fn('ARRAY_AGG', Sequelize.col('id')), 'messageIds'];
     queryObject.group = 'originalMessageId';
-    queryObject.attributes = [from, originalMessageId, mostRecent, count, isArchived, unread];
+    queryObject.attributes =
+        [from, originalMessageId, mostRecent, count, isArchived, unread, messageIds];
 
     Message.scope({ method: ['forUser', req.user] })
         .findAll(queryObject)
