@@ -5,25 +5,10 @@ import APIError from '../helpers/APIError';
 const Message = db.Message;
 const Thread = db.Thread;
 
-const useUnscoped = (url) => {
-    const unscopedRoutes = ['/unarchive/', '/delete/'];
-    return unscopedRoutes.find(route => url.includes(route)) !== undefined;
-};
-const useUnscopedArchived = (url) => {
-    const unscopedRoutes = ['/reply/'];
-    return unscopedRoutes.find(route => url.includes(route)) !== undefined;
-};
-
-
 /**
  * Used to load appropriate scope per request.
  */
 const messageScope = function messageScope(req) {
-    if (useUnscoped(req.originalUrl)) {
-        return Message.scope({ method: ['findAllForUser', req.user] });
-    } else if (useUnscopedArchived(req.originalUrl)) {
-        return Message.scope({ method: ['forUserNonDeleted', req.user] });
-    }
     return Message.scope({ method: ['forUser', req.user] });
 };
 
@@ -185,27 +170,38 @@ function list(req, res) {
         queryObject.where = { ...queryObject.where, ...whereObject };
     }
 
-    if (req.query.limit) {
+    if (req.query.limit !== undefined) {
         queryObject.limit = req.query.limit;
     }
 
-    if (req.query.summary) {
+    if (req.query.offset !== undefined) {
+        queryObject.offset = req.query.offset;
+    }
+
+    if (req.query.summary === 'true') {
         queryObject.attributes = ['subject', 'from', 'createdAt'];
     }
 
-    if (req.query.archived && req.query.archived === 'true') {
-        queryObject.where.isArchived = true;
-        queryObject.where.isDeleted = false;
-        queryObject.where.owner = req.user.username;
-        Message
-            .unscoped().findAll(queryObject)
-            .then(results => res.send(results));
-    } else {
-        Message
-          .scope({ method: ['forUser', req.user] })
-          .findAll(queryObject)
-          .then(results => res.send(results));
+    if (req.query.received === 'true') {
+        queryObject.where.to = { $contains: [req.user.username] };
     }
+
+    if (req.query.sent === 'true') {
+        queryObject.where.from = req.user.username;
+    }
+
+    if (req.query.unread === 'true') {
+        queryObject.where.readAt = null;
+    }
+
+    if (req.query.archived !== undefined) {
+        queryObject.where.isArchived = req.query.archived === 'true';
+    }
+
+    Message
+        .scope({ method: ['forUser', req.user] })
+        .findAll(queryObject)
+        .then(results => res.send(results));
 }
 
 function count() {}
@@ -250,4 +246,43 @@ function unarchive(req, res) {
     return res.send(req.message);
 }
 
-export default { send, reply, get, list, count, remove, load, archive, unarchive };
+/**
+ * Remove readAt timestamp
+ * sets readAt of message with messageId to null
+ * @returns {Message}
+ */
+function markAsUnread(req, res, next) {
+    if (req.message) {
+        return req.message.update({ readAt: null })
+        .then(response => res.send(response));
+    }
+    return next();
+}
+
+/**
+ * Set readAt timestamp
+ * sets readAt of message to the current time
+ * @returns {Message}
+ */
+function markAsRead(req, res) {
+    if (req.message) {
+        req.message.update({
+            readAt: new Date(),
+        });
+    }
+    return res.send(req.message);
+}
+
+export default {
+    send,
+    reply,
+    get,
+    list,
+    count,
+    remove,
+    load,
+    archive,
+    unarchive,
+    markAsUnread,
+    markAsRead,
+};

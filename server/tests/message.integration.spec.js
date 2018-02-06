@@ -31,13 +31,14 @@ const fromArray = ['user0', 'user1', 'user2', 'user3'];
 const MessageUnscoped = Message.unscoped();
 // 4 senders send message to 4 recipients each
 fromArray.forEach((receiver) => {
-    fromArray.forEach((sender) => {
+    fromArray.forEach((sender, index) => {
         testMessageArray.push({
             to: fromArray,
             from: sender,
             subject: 'Test Message',
             message: 'Test post please ignore',
             owner: receiver,
+            isArchived: index < 1,
         });
     });
 });
@@ -332,15 +333,106 @@ describe('Message API:', () => {
             })
         );
 
+        it('has an option to offset Messages returned', () => request(app)
+            .get(`${baseURL}/message/list?offset=${testMessageArray.length - 1}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.be.an('array');
+                expect(res.body.length).to.be.at.most(1);
+                return;
+            })
+        );
+
         it('has an option to limit by sender', () => request(app)
             .get(`${baseURL}/message/list?from=${userName}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
             .then((res) => {
                 expect(res.body).to.be.an('array');
+                expect(res.body.length).to.not.equal(0);
                 expect(res.body[0].from).to.equal(testMessageArray[0].from);
                 expect(res.body[0].to).to.deep.equal(testMessageArray[0].to);
                 return;
+            })
+        );
+
+        it('has an option to filter by sent messages', () => request(app)
+            .get(`${baseURL}/message/list?sent=true`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.be.an('array');
+                expect(res.body.length).to.not.equal(0);
+                expect(() => {
+                    let i;
+                    for (i = 0; i < res.body.length; i++) { // eslint-disable-line no-plusplus
+                        if (res.body[i].from !== userName) {
+                            throw new Error(`${res.body[i].from} does not equal ${userName}`);
+                        }
+                    }
+                }).to.not.throw();
+                return;
+            })
+        );
+
+        it('has an option to filter by received messages', () => request(app)
+            .get(`${baseURL}/message/list?received=true`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.be.an('array');
+                expect(res.body.length).to.not.equal(0);
+                expect(() => {
+                    let i;
+                    for (i = 0; i < res.body.length; i++) { // eslint-disable-line no-plusplus
+                        if (!res.body[i].to.includes(userName)) {
+                            throw new Error(`${res.body[i].to} does not contain ${userName}`);
+                        }
+                    }
+                }).to.not.throw();
+                return;
+            })
+        );
+
+        it('has an option to filter by unread messages', () => request(app)
+            .get(`${baseURL}/message/list?unread=true`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.be.an('array');
+                expect(res.body.length).to.not.equal(0);
+                expect(() => {
+                    let i;
+                    for (i = 0; i < res.body.length; i++) { // eslint-disable-line no-plusplus
+                        if (res.body[i].readAt) {
+                            throw new Error(`${res.body[i].readAt} message was already read`);
+                        }
+                    }
+                }).to.not.throw();
+                return;
+            })
+        );
+
+        it('has an option to filter by archived messages', () => request(app)
+            .get(`${baseURL}/message/list?archived=true`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.be.an('array');
+                expect(res.body.length).to.equal(1);
+                expect(res.body[0].isArchived).to.equal(true);
+            })
+        );
+
+        it('has an option to filter by unarchived messages', () => request(app)
+            .get(`${baseURL}/message/list?archived=false`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body).to.be.an('array');
+                expect(res.body.length).to.equal(3);
+                res.body.forEach(message => expect(message.isArchived).to.equal(false));
             })
         );
 
@@ -496,6 +588,8 @@ describe('Message API:', () => {
 
     describe('PUT /message/archive/:messageId', () => {
         let messageId;
+        let archivedMessageId;
+        let deletedMessageId;
 
         before(() => Message
                       .destroy({
@@ -510,6 +604,26 @@ describe('Message API:', () => {
                     messageId = message.body.id;
                     return;
                 }))
+                .then(() => request(app)
+                    .post(`${baseURL}/message/send`)
+                    .set('Authorization', `Bearer ${auth}`)
+                    .send(testMessageObject)
+                    .expect(httpStatus.OK)
+                    .then((messageToArchive) => {
+                        archivedMessageId = messageToArchive.body.id;
+                    }))
+                .then(() => request(app)
+                    .post(`${baseURL}/message/send`)
+                    .set('Authorization', `Bearer ${auth}`)
+                    .send(testMessageObject)
+                    .expect(httpStatus.OK)
+                    .then((messageToArchiveAndDelete) => {
+                        deletedMessageId = messageToArchiveAndDelete.body.id;
+                        return request(app)
+                        .delete(`${baseURL}/message/delete/${deletedMessageId}`)
+                        .set('Authorization', `Bearer ${auth}`)
+                        .expect(httpStatus.OK);
+                    }))
         );
 
         it('should archive and return message', () =>
@@ -542,7 +656,7 @@ describe('Message API:', () => {
         );
 
         it('should unarchive and return message', () => request(app)
-            .put(`${baseURL}/message/unarchive/${messageId}`)
+            .put(`${baseURL}/message/unarchive/${archivedMessageId}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
             .then((res) => {
@@ -554,11 +668,93 @@ describe('Message API:', () => {
             })
         );
 
+        it('should not unarchive deleted messages', () => request(app)
+            .put(`${baseURL}/message/unarchive/${deletedMessageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.NOT_FOUND));
+
         after(() => Message
             .destroy({
                 where: {},
                 truncate: true,
             })
         );
+    });
+
+    describe('PUT /message/markAsUnread/:messageId', () => {
+        let messageId;
+
+        before(() => Message
+                      .destroy({
+                          where: {},
+                          truncate: true,
+                      }).then(() => request(app)
+                .post(`${baseURL}/message/send`)
+                .set('Authorization', `Bearer ${auth}`)
+                .send(testMessageObject)
+                .expect(httpStatus.OK)
+                .then((message) => {
+                    messageId = message.body.id;
+                    expect(message.body.readAt).is.a('string');
+                })));
+
+        it('should mark a message as unread', () => request(app)
+            .get(`${baseURL}/message/get/${messageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((message) => {
+                expect(message.body.readAt).is.a('string');
+            })
+            .then(() => request(app)
+                .put(`${baseURL}/message/markAsUnread/${messageId}`)
+                .set('Authorization', `Bearer ${auth}`)
+                .expect(httpStatus.OK)
+                .then((message) => {
+                    expect(message.body.readAt).is.a('null');
+                })));
+
+        it('should 404 if not found', () => request(app)
+            .put(`${baseURL}/messages/markAsRead/-1`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.NOT_FOUND));
+    });
+
+    describe('PUT /message/markAsRead/:messageId', () => {
+        let messageId;
+
+        before(() => Message
+                      .destroy({
+                          where: {},
+                          truncate: true,
+                      }).then(() => request(app)
+                .post(`${baseURL}/message/send`)
+                .set('Authorization', `Bearer ${auth}`)
+                .send(testMessageObject)
+                .expect(httpStatus.OK)
+                .then((message) => {
+                    messageId = message.body.id;
+                    expect(message.body.readAt).is.a('string');
+                }))
+                .then(() => request(app)
+                    .put(`${baseURL}/message/markAsUnread/${messageId}`)
+                    .set('Authorization', `Bearer ${auth}`)
+                    .expect(httpStatus.OK)
+                    .then((message) => {
+                        expect(message.body.readAt).is.a('null');
+                    }))
+        );
+
+        it('should mark a message as read', () => request(app)
+            .put(`${baseURL}/message/markAsRead/${messageId}`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((message) => {
+                expect(message.body.readAt).is.a('string');
+            }));
+
+        it('should 404 if not found', () => request(app)
+            .put(`${baseURL}/messages/markAsRead/-1`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.NOT_FOUND));
     });
 });

@@ -71,22 +71,6 @@ module.exports = (sequelize, DataTypes) => {
                     where: {
                         owner: user.username,
                         isDeleted: false,
-                        isArchived: false,
-                    },
-                };
-            },
-            forUserNonDeleted(user) {
-                return {
-                    where: {
-                        owner: user.username,
-                        isDeleted: false,
-                    },
-                };
-            },
-            findAllForUser(user) {
-                return {
-                    where: {
-                        owner: user.username,
                     },
                 };
             },

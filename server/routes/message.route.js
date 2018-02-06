@@ -19,6 +19,10 @@ router.route('/reply/:messageId')
  * - limit: number of messages to return
  * - from: filter on message sender by username
  * - summary: boolean, can return a summary version of messages
+ * - received: boolean, filters by received messages
+ * - sent: boolean, filters by send messages
+ * - unread: boolean, filters by unread messages
+ * - offset: int, to be used with limit for pagination
  */
 router.route('/list')
     .get(messageCtrl.list);
@@ -42,6 +46,12 @@ router.route('/archive/:messageId')
 
 router.route('/unarchive/:messageId')
     .put(messageCtrl.unarchive);
+
+router.route('/markAsUnread/:messageId')
+    .put(messageCtrl.markAsUnread);
+
+router.route('/markAsRead/:messageId')
+    .put(messageCtrl.markAsRead);
 
 /** Load message when API with route parameter is hit */
 router.param('messageId', messageCtrl.load);
