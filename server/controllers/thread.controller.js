@@ -83,6 +83,7 @@ function list(req, res, next) {
     const queryObject = {
         raw: true,
         where: {},
+        order: [[Sequelize.fn('MAX', Sequelize.col('createdAt')), 'DESC']],
     };
 
     if (req.query.limit) {
