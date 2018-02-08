@@ -10,4 +10,10 @@ router.use(passport.authenticate('jwt', { session: false }));
 router.route('/')
     .post(threadsCtrl.create);
 
+router.route('/')
+    .get(threadsCtrl.index);
+
+router.route('/:threadId/reply')
+    .post(threadsCtrl.reply);
+
 export default router;

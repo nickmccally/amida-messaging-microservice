@@ -16,15 +16,14 @@ const User = db.User;
  * @returns {Message}
  */
 function create(req, res, next) {
+    const { username } = req.user;
     const participants = req.body.participants;
-    console.log("found participant", participants)
     let users = [];
     let userPromises = [];
     participants.forEach((participant) => {
       let userPromise = User.findOrCreate({where: {username: participant}})
       .spread((user, created) => {
         users.push(user);
-        // console.log(created)
       });
       userPromises.push(userPromise);
     });
@@ -32,19 +31,26 @@ function create(req, res, next) {
     Promise.all(userPromises).then(() => {
       Thread.create({topic: req.body.topic}).then((thread) => {
         thread.setUsers(users);
+        const sender = users.find(sender => {
+          return sender.username === username;
+        })
         Message.create({
-          from: req.user.username,
-          to: participants,
-          owner: req.user.username,
+          from: username,
+          to: [],
+          owner: '',
           subject: '',
           message: req.body.message,
-
+          SenderId: sender.id,
+          ThreadId: thread.id,
+          LastMessageId: thread.id //adding this while creating is okay as this is the first message in thread
         }).then((message) => {
-          thread.addMessage(message);
+          // I simply passed the LastMessageId and ThreadId properties while creating
+          // the message as alternative to calling the methods below to save the extra db operation
+          // thread.addMessage(message);
+          // thread.setLastMessage(message); EG
           let addUserMessagePromises = [];
           users.forEach((user) => {
             let addUserMessagePromise = user.addMessage(message).then(() => {
-
             });
             addUserMessagePromises.push(addUserMessagePromise);
           });
@@ -56,6 +62,80 @@ function create(req, res, next) {
     })
 }
 
+/**
+ * Replies to an existing thread
+ * @property {string} req.body.message - Body of the message
+ * @property {Number} req.params.threadId - DB ID of the thread being replied to
+ * @returns {Message}
+ */
+function reply(req, res, next) {
+  Thread.findById(req.params.threadId)
+    .then((thread) => {
+      if (!thread) {
+          const err = new APIError('Thread does not exist', httpStatus.NOT_FOUND, true);
+          return next(err);
+      }
+      const { username } = req.user;
+      User.findOne({where: {username}}).then(currentUser => {
+        Message.create({
+            from: username,
+            to: [],
+            owner: '',
+            subject: '',
+            message: req.body.message,
+            SenderId: currentUser.id //set sender id while creating instead of doing message.setSender(currentUser) later
+        }).then((message) => {
+          thread.addMessage(message);
+          thread.setLastMessage(message);
+          thread.getUsers().then((users) => {
+            const addUserMessagePromises = [];
+            users.forEach((user) => {
+              const addUserMessagePromise = user.addMessage(message).then(() => {
+
+              });
+              addUserMessagePromises.push(addUserMessagePromise);
+            });
+            Promise.all(addUserMessagePromises).then(() => {
+              res.send({message})
+            })
+          })
+        })
+      })
+    })
+    .catch(e => next(e));
+}
+
+/**
+ * Returns a the current user and a list of the current user's threads
+ * @returns {User}
+ */
+function index(req, res, next) {
+  const { username } = req.user;
+  User.findOne({
+    where: {username},
+    include: [{
+      model: Thread,
+      include:[{
+        model: Message,
+        as: 'LastMessage',
+        include: [{
+          association: 'Sender'
+        }]
+      }]
+    }]
+    })
+    .then((user) => {
+      if (!user) {
+          const err = new APIError('Thread does not exist', httpStatus.NOT_FOUND, true);
+          return next(err);
+      }
+      res.send(user)
+    })
+    .catch(e => next(e));
+}
+
 export default {
-    create
+    create,
+    reply,
+    index
 };
