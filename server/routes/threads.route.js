@@ -16,4 +16,7 @@ router.route('/')
 router.route('/:threadId/reply')
     .post(threadsCtrl.reply);
 
+router.route('/:threadId')
+    .get(threadsCtrl.show);
+
 export default router;

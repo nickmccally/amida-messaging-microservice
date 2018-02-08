@@ -106,6 +106,29 @@ function reply(req, res, next) {
 }
 
 /**
+ * Returns messages for a thread
+ * @property {Number} req.params.threadId - DB ID of the thread
+ * @returns {[Message]}
+ */
+function show(req, res, next) {
+  Thread.findById(req.params.threadId)
+    .then((thread) => {
+      if (!thread) {
+          const err = new APIError('Thread does not exist', httpStatus.NOT_FOUND, true);
+          return next(err);
+      }
+      thread.getMessages({
+        include: [{
+          association: 'Sender'
+        }]
+        }).then(messages => {
+        res.send(messages)
+      })
+    })
+    .catch(e => next(e));
+}
+
+/**
  * Returns a the current user and a list of the current user's threads
  * @returns {User}
  */
@@ -129,7 +152,7 @@ function index(req, res, next) {
           const err = new APIError('Thread does not exist', httpStatus.NOT_FOUND, true);
           return next(err);
       }
-      res.send(user)
+      res.send(user.Threads)
     })
     .catch(e => next(e));
 }
@@ -137,5 +160,6 @@ function index(req, res, next) {
 export default {
     create,
     reply,
+    show,
     index
 };
