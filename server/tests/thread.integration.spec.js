@@ -21,15 +21,11 @@ const inaccessibleMessageObject = {
     message: '*Self destruct*',
 };
 
-const now = new Date();
-
 const threadMessageTemplate = {
     subject: 'subject',
     message: 'message',
     isDeleted: false,
     isArchived: false,
-    createdAt: now,
-    updatedAt: now,
     readAt: null,
     owner: 'user0',
     from: 'user0',
@@ -100,7 +96,11 @@ const getThreadsTestObject = [
         parentMessageId: null,
         isDeleted: true,
     },
-].map(message => Object.assign({}, threadMessageTemplate, message));
+].map((message, index) => {
+    const date = new Date();
+    date.setSeconds(date.getSeconds() + index);
+    return Object.assign({}, threadMessageTemplate, { createdAt: date, updatedAt: date }, message);
+});
 
 describe('Thread API:', () => {
     describe('GET /thread/', () => {
@@ -119,6 +119,21 @@ describe('Thread API:', () => {
                 expect(res.body).to.be.an('array');
                 expect(res.body.length).to.equal(5);
                 expect(res.body.map(thread => thread.originalMessageId)).to.not.include(10);
+            })
+        );
+
+        it('should return newest threads first', () => request(app)
+            .get(`${baseURL}/thread`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body.length).to.be.greaterThan(1);
+                res.body.forEach((thread, index) => {
+                    if (index < res.body.length - 1) {
+                        expect(thread.mostRecent > res.body[index + 1].mostRecent, `index: ${index}`)
+                        .to.equal(true);
+                    }
+                });
             })
         );
 
@@ -141,7 +156,7 @@ describe('Thread API:', () => {
             .expect(httpStatus.OK)
             .then((res) => {
                 expect(res.body).to.be.an('array');
-                const unread = [true, true, true, true, false];
+                const unread = [false, true, true, true, true];
                 res.body.forEach((thread, index) => {
                     expect(thread.unread, `unread[${index}]`).to.equal(unread[index]);
                 });
@@ -154,7 +169,7 @@ describe('Thread API:', () => {
             .expect(httpStatus.OK)
             .then((res) => {
                 expect(res.body).to.be.an('array');
-                const count = [1, 2, 2, 2, 2];
+                const count = [2, 2, 2, 2, 1];
                 res.body.forEach((thread, index) => {
                     expect(thread.count, `count[${index}]`).to.equal(count[index]);
                 });
@@ -167,11 +182,11 @@ describe('Thread API:', () => {
             .expect(httpStatus.OK)
             .then((res) => {
                 expect(res.body).to.be.an('array');
-                const from = [['user0'],
+                const from = [['user0', 'user1'],
                     ['user0'],
                     ['user0'],
                     ['user0'],
-                    ['user0', 'user1']];
+                    ['user0']];
                 res.body.forEach((thread, index) => {
                     expect(thread.from, `from[${index}]`).to.deep.equal(from[index]);
                 });
@@ -184,7 +199,7 @@ describe('Thread API:', () => {
             .expect(httpStatus.OK)
             .then((res) => {
                 expect(res.body).to.be.an('array');
-                const messageIds = [[1], [2, 3], [4, 5], [6, 7], [8, 9]];
+                const messageIds = [[8, 9], [6, 7], [4, 5], [2, 3], [1]];
                 res.body.forEach((thread, index) => {
                     expect(thread.messageIds, `messageIds[${index}]`).to.deep.equal(messageIds[index]);
                 });
@@ -207,7 +222,7 @@ describe('Thread API:', () => {
             .expect(httpStatus.OK)
             .then((res) => {
                 expect(res.body).to.be.an('array');
-                expect(res.body[0].originalMessageId).to.equal(2);
+                expect(res.body[0].originalMessageId).to.equal(6);
             })
         );
 
@@ -240,7 +255,7 @@ describe('Thread API:', () => {
             .expect(httpStatus.OK)
             .then((res) => {
                 expect(res.body).to.have.length(1);
-                expect(res.body[0].originalMessageId).to.equal(2);
+                expect(res.body[0].originalMessageId).to.equal(6);
             })
         );
     });
