@@ -29,9 +29,12 @@ const testMessageObject = {
 const testMessageArray = [];
 const fromArray = ['user0', 'user1', 'user2', 'user3'];
 const MessageUnscoped = Message.unscoped();
+let date = new Date();
 // 4 senders send message to 4 recipients each
 fromArray.forEach((receiver) => {
     fromArray.forEach((sender, index) => {
+        date = new Date(date);
+        date.setSeconds(date.getSeconds() + 1);
         testMessageArray.push({
             to: fromArray,
             from: sender,
@@ -39,6 +42,7 @@ fromArray.forEach((receiver) => {
             message: 'Test post please ignore',
             owner: receiver,
             isArchived: index < 1,
+            createdAt: date,
         });
     });
 });
@@ -322,6 +326,21 @@ describe('Message API:', () => {
             })
         );
 
+        it('should return newest messages first', () => request(app)
+            .get(`${baseURL}/message/list`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then((res) => {
+                expect(res.body.length).to.be.greaterThan(1);
+                res.body.forEach((message, index) => {
+                    if (index < res.body.length - 1) {
+                        expect(message.createdAt > res.body[index + 1].createdAt, `index: ${index}`)
+                        .to.equal(true);
+                    }
+                });
+            })
+        );
+
         it('has an option to limit Messages returned', () => request(app)
             .get(`${baseURL}/message/list?limit=${limit}`)
             .set('Authorization', `Bearer ${auth}`)
@@ -442,10 +461,10 @@ describe('Message API:', () => {
             .expect(httpStatus.OK)
             .then((res) => {
                 expect(res.body).to.be.an('array');
-                expect(res.body[0].from).to.equal(testMessageArray[0].from);
-                expect(res.body[0].subject).to.be.a('string');
-                expect(res.body[0].to).to.be.a('undefined');
-                expect(res.body[0].message).to.be.a('undefined');
+                expect(res.body[3].from).to.equal(testMessageArray[0].from);
+                expect(res.body[3].subject).to.be.a('string');
+                expect(res.body[3].to).to.be.a('undefined');
+                expect(res.body[3].message).to.be.a('undefined');
                 return;
             })
         );

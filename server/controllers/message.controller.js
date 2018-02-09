@@ -154,6 +154,7 @@ function reply(req, res, next) {
 function list(req, res) {
     const queryObject = {
         where: {},
+        order: [['createdAt', 'DESC']],
     };
 
     if (req.query.from) {
