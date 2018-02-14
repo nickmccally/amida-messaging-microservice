@@ -319,9 +319,11 @@ describe('Message API:', () => {
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
             .then((res) => {
+                const owned = testMessageArray.filter(message => message.owner === 'user0');
                 expect(res.body).to.be.an('array');
-                expect(res.body.from).to.equal(testMessageArray.from);
-                expect(res.body.to).to.equal(testMessageArray.to);
+                expect(res.body.map(message => message.from))
+                .to.deep.equal(owned.map(message => message.from).reverse());
+                res.body.forEach(message => expect(message.to).to.deep.equal(fromArray));
                 return;
             })
         );
