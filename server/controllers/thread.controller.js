@@ -113,8 +113,8 @@ function list(req, res, next) {
         [from, originalMessageId, mostRecent, count, isArchived, unread, messageIds];
 
     Message.scope({ method: ['forUser', req.user] })
-        .findAll(queryObject)
-        .then((threadsResponse) => {
+        .findAndCountAll(queryObject)
+        .then(({ rows: threadsResponse, count: findCount }) => {
             Message.scope({ method: ['forUser', req.user] })
             .findAll({ raw: true })
             .then((allMessages) => {
@@ -132,7 +132,7 @@ function list(req, res, next) {
                     threads[i].subject
                       = findFirstSubjectText(threads[i], allMessages);
                 }
-                res.send(threads);
+                res.send({ threads, count: findCount.length });
             });
         })
         .catch(next);
