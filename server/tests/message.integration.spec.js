@@ -440,6 +440,44 @@ describe('Message API:', () => {
                 expect(messages[3].message).to.be.a('undefined');
             })
         );
+
+        it('returns the count of all messages', () => request(app)
+            .get(`${baseURL}/message/list`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(({ body: { count } }) => {
+                expect(count).to.equal(4);
+            })
+        );
+
+        it('returns the count for archived queries', () => request(app)
+            .get(`${baseURL}/message/list?archived=false`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(({ body: { count } }) => {
+                expect(count).to.equal(3);
+            })
+        );
+
+        it('returns the unlimited count for limited queries', () => request(app)
+            .get(`${baseURL}/message/list?limit=1`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(({ body: { count, messages } }) => {
+                expect(count).to.equal(4);
+                expect(messages.length).to.equal(1);
+            })
+        );
+
+        it('returns the unlimited, filtered count for limited, filtered queries', () => request(app)
+            .get(`${baseURL}/message/list?limit=1&archived=false`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(({ body: { count, messages } }) => {
+                expect(count).to.equal(3);
+                expect(messages.length).to.equal(1);
+            })
+        );
     });
 
     // describe('GET /message/count/:userId', function () {
