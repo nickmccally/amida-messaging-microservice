@@ -115,10 +115,10 @@ describe('Thread API:', () => {
             .get(`${baseURL}/thread`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body.length).to.equal(5);
-                expect(res.body.map(thread => thread.originalMessageId)).to.not.include(10);
+            .then(({ body: { threads } }) => {
+                expect(threads).to.be.an('array');
+                expect(threads.length).to.equal(5);
+                expect(threads.map(thread => thread.originalMessageId)).to.not.include(10);
             })
         );
 
@@ -126,11 +126,11 @@ describe('Thread API:', () => {
             .get(`${baseURL}/thread`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body.length).to.be.greaterThan(1);
-                res.body.forEach((thread, index) => {
-                    if (index < res.body.length - 1) {
-                        expect(thread.mostRecent > res.body[index + 1].mostRecent, `index: ${index}`)
+            .then(({ body: { threads } }) => {
+                expect(threads.length).to.be.greaterThan(1);
+                threads.forEach((thread, index) => {
+                    if (index < threads.length - 1) {
+                        expect(thread.mostRecent > threads[index + 1].mostRecent, `index: ${index}`)
                         .to.equal(true);
                     }
                 });
@@ -141,10 +141,10 @@ describe('Thread API:', () => {
             .get(`${baseURL}/thread`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
+            .then(({ body: { threads } }) => {
+                expect(threads).to.be.an('array');
                 const isArchived = [false, false, true, false, false];
-                res.body.forEach((thread, index) => {
+                threads.forEach((thread, index) => {
                     expect(thread.isArchived, `isArchived[${index}]`).to.equal(isArchived[index]);
                 });
             })
@@ -154,10 +154,10 @@ describe('Thread API:', () => {
             .get(`${baseURL}/thread`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
+            .then(({ body: { threads } }) => {
+                expect(threads).to.be.an('array');
                 const unread = [false, true, true, true, true];
-                res.body.forEach((thread, index) => {
+                threads.forEach((thread, index) => {
                     expect(thread.unread, `unread[${index}]`).to.equal(unread[index]);
                 });
             })
@@ -167,10 +167,10 @@ describe('Thread API:', () => {
             .get(`${baseURL}/thread`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
+            .then(({ body: { threads } }) => {
+                expect(threads).to.be.an('array');
                 const count = [2, 2, 2, 2, 1];
-                res.body.forEach((thread, index) => {
+                threads.forEach((thread, index) => {
                     expect(thread.count, `count[${index}]`).to.equal(count[index]);
                 });
             })
@@ -180,14 +180,14 @@ describe('Thread API:', () => {
             .get(`${baseURL}/thread`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
+            .then(({ body: { threads } }) => {
+                expect(threads).to.be.an('array');
                 const from = [['user0', 'user1'],
                     ['user0'],
                     ['user0'],
                     ['user0'],
                     ['user0']];
-                res.body.forEach((thread, index) => {
+                threads.forEach((thread, index) => {
                     expect(thread.from, `from[${index}]`).to.deep.equal(from[index]);
                 });
             })
@@ -197,10 +197,10 @@ describe('Thread API:', () => {
             .get(`${baseURL}/thread`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
+            .then(({ body: { threads } }) => {
+                expect(threads).to.be.an('array');
                 const messageIds = [[8, 9], [6, 7], [4, 5], [2, 3], [1]];
-                res.body.forEach((thread, index) => {
+                threads.forEach((thread, index) => {
                     expect(thread.messageIds, `messageIds[${index}]`).to.deep.equal(messageIds[index]);
                 });
             })
@@ -210,9 +210,9 @@ describe('Thread API:', () => {
             .get(`${baseURL}/thread?limit=1`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body).to.have.length(1);
+            .then(({ body: { threads } }) => {
+                expect(threads).to.be.an('array');
+                expect(threads).to.have.length(1);
             })
         );
 
@@ -220,9 +220,9 @@ describe('Thread API:', () => {
             .get(`${baseURL}/thread?offset=1`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body[0].originalMessageId).to.equal(6);
+            .then(({ body: { threads } }) => {
+                expect(threads).to.be.an('array');
+                expect(threads[0].originalMessageId).to.equal(6);
             })
         );
 
@@ -230,9 +230,9 @@ describe('Thread API:', () => {
             .get(`${baseURL}/thread?archived=true`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.have.length(1);
-                expect(res.body[0].isArchived).to.equal(true);
+            .then(({ body: { threads } }) => {
+                expect(threads).to.have.length(1);
+                expect(threads[0].isArchived).to.equal(true);
             })
         );
 
@@ -240,12 +240,12 @@ describe('Thread API:', () => {
             .get(`${baseURL}/thread?archived=false`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.have.length(4);
-                expect(res.body[0].isArchived).to.equal(false);
-                expect(res.body[1].isArchived).to.equal(false);
-                expect(res.body[2].isArchived).to.equal(false);
-                expect(res.body[3].isArchived).to.equal(false);
+            .then(({ body: { threads } }) => {
+                expect(threads).to.have.length(4);
+                expect(threads[0].isArchived).to.equal(false);
+                expect(threads[1].isArchived).to.equal(false);
+                expect(threads[2].isArchived).to.equal(false);
+                expect(threads[3].isArchived).to.equal(false);
             })
         );
 
@@ -253,9 +253,9 @@ describe('Thread API:', () => {
             .get(`${baseURL}/thread?archived=false&offset=1&limit=1`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.have.length(1);
-                expect(res.body[0].originalMessageId).to.equal(6);
+            .then(({ body: { threads } }) => {
+                expect(threads).to.have.length(1);
+                expect(threads[0].originalMessageId).to.equal(6);
             })
         );
     });
