@@ -258,6 +258,44 @@ describe('Thread API:', () => {
                 expect(threads[0].originalMessageId).to.equal(6);
             })
         );
+
+        it('returns the count of all threads', () => request(app)
+            .get(`${baseURL}/thread`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(({ body: { count } }) => {
+                expect(count).to.equal(5);
+            })
+        );
+
+        it('returns the count for archived queries', () => request(app)
+            .get(`${baseURL}/thread?archived=false`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(({ body: { count } }) => {
+                expect(count).to.equal(4);
+            })
+        );
+
+        it('returns the unlimited count for limited queries', () => request(app)
+            .get(`${baseURL}/thread?limit=1`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(({ body: { count, threads } }) => {
+                expect(count).to.equal(5);
+                expect(threads.length).to.equal(1);
+            })
+        );
+
+        it('returns the unlimited, filtered count for limited, filtered queries', () => request(app)
+            .get(`${baseURL}/thread?limit=1&archived=false`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(({ body: { count, threads } }) => {
+                expect(count).to.equal(4);
+                expect(threads.length).to.equal(1);
+            })
+        );
     });
 
     describe('GET /thread/:originalMessageId', () => {
