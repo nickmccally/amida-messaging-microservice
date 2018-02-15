@@ -318,13 +318,12 @@ describe('Message API:', () => {
             .get(`${baseURL}/message/list`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
+            .then(({ body: { messages } }) => {
                 const owned = testMessageArray.filter(message => message.owner === 'user0');
-                expect(res.body).to.be.an('array');
-                expect(res.body.map(message => message.from))
+                expect(messages).to.be.an('array');
+                expect(messages.map(message => message.from))
                 .to.deep.equal(owned.map(message => message.from).reverse());
-                res.body.forEach(message => expect(message.to).to.deep.equal(fromArray));
-                return;
+                messages.forEach(message => expect(message.to).to.deep.equal(fromArray));
             })
         );
 
@@ -332,11 +331,11 @@ describe('Message API:', () => {
             .get(`${baseURL}/message/list`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body.length).to.be.greaterThan(1);
-                res.body.forEach((message, index) => {
-                    if (index < res.body.length - 1) {
-                        expect(message.createdAt > res.body[index + 1].createdAt, `index: ${index}`)
+            .then(({ body: { messages } }) => {
+                expect(messages.length).to.be.greaterThan(1);
+                messages.forEach((message, index) => {
+                    if (index < messages.length - 1) {
+                        expect(message.createdAt > messages[index + 1].createdAt, `index: ${index}`)
                         .to.equal(true);
                     }
                 });
@@ -347,10 +346,9 @@ describe('Message API:', () => {
             .get(`${baseURL}/message/list?limit=${limit}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body.length).to.be.at.most(limit);
-                return;
+            .then(({ body: { messages } }) => {
+                expect(messages).to.be.an('array');
+                expect(messages.length).to.be.at.most(limit);
             })
         );
 
@@ -358,10 +356,9 @@ describe('Message API:', () => {
             .get(`${baseURL}/message/list?offset=${testMessageArray.length - 1}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body.length).to.be.at.most(1);
-                return;
+            .then(({ body: { messages } }) => {
+                expect(messages).to.be.an('array');
+                expect(messages.length).to.be.at.most(1);
             })
         );
 
@@ -369,12 +366,11 @@ describe('Message API:', () => {
             .get(`${baseURL}/message/list?from=${userName}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body.length).to.not.equal(0);
-                expect(res.body[0].from).to.equal(testMessageArray[0].from);
-                expect(res.body[0].to).to.deep.equal(testMessageArray[0].to);
-                return;
+            .then(({ body: { messages } }) => {
+                expect(messages).to.be.an('array');
+                expect(messages.length).to.not.equal(0);
+                expect(messages[0].from).to.equal(testMessageArray[0].from);
+                expect(messages[0].to).to.deep.equal(testMessageArray[0].to);
             })
         );
 
@@ -382,18 +378,9 @@ describe('Message API:', () => {
             .get(`${baseURL}/message/list?sent=true`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body.length).to.not.equal(0);
-                expect(() => {
-                    let i;
-                    for (i = 0; i < res.body.length; i++) { // eslint-disable-line no-plusplus
-                        if (res.body[i].from !== userName) {
-                            throw new Error(`${res.body[i].from} does not equal ${userName}`);
-                        }
-                    }
-                }).to.not.throw();
-                return;
+            .then(({ body: { messages } }) => {
+                expect(messages).to.be.an('array');
+                expect(messages.length).to.not.equal(0);
             })
         );
 
@@ -401,18 +388,10 @@ describe('Message API:', () => {
             .get(`${baseURL}/message/list?received=true`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body.length).to.not.equal(0);
-                expect(() => {
-                    let i;
-                    for (i = 0; i < res.body.length; i++) { // eslint-disable-line no-plusplus
-                        if (!res.body[i].to.includes(userName)) {
-                            throw new Error(`${res.body[i].to} does not contain ${userName}`);
-                        }
-                    }
-                }).to.not.throw();
-                return;
+            .then(({ body: { messages } }) => {
+                expect(messages).to.be.an('array');
+                expect(messages.length).to.not.equal(0);
+                messages.forEach(message => expect(message.to).to.include(userName));
             })
         );
 
@@ -420,18 +399,10 @@ describe('Message API:', () => {
             .get(`${baseURL}/message/list?unread=true`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body.length).to.not.equal(0);
-                expect(() => {
-                    let i;
-                    for (i = 0; i < res.body.length; i++) { // eslint-disable-line no-plusplus
-                        if (res.body[i].readAt) {
-                            throw new Error(`${res.body[i].readAt} message was already read`);
-                        }
-                    }
-                }).to.not.throw();
-                return;
+            .then(({ body: { messages } }) => {
+                expect(messages).to.be.an('array');
+                expect(messages.length).to.not.equal(0);
+                messages.forEach(message => expect(message.readAt).to.be.a('null'));
             })
         );
 
@@ -439,10 +410,10 @@ describe('Message API:', () => {
             .get(`${baseURL}/message/list?archived=true`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body.length).to.equal(1);
-                expect(res.body[0].isArchived).to.equal(true);
+            .then(({ body: { messages } }) => {
+                expect(messages).to.be.an('array');
+                expect(messages.length).to.equal(1);
+                expect(messages[0].isArchived).to.equal(true);
             })
         );
 
@@ -450,10 +421,10 @@ describe('Message API:', () => {
             .get(`${baseURL}/message/list?archived=false`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body.length).to.equal(3);
-                res.body.forEach(message => expect(message.isArchived).to.equal(false));
+            .then(({ body: { messages } }) => {
+                expect(messages).to.be.an('array');
+                expect(messages.length).to.equal(3);
+                messages.forEach(message => expect(message.isArchived).to.equal(false));
             })
         );
 
@@ -461,13 +432,12 @@ describe('Message API:', () => {
             .get(`${baseURL}/message/list?summary=${summary}`)
             .set('Authorization', `Bearer ${auth}`)
             .expect(httpStatus.OK)
-            .then((res) => {
-                expect(res.body).to.be.an('array');
-                expect(res.body[3].from).to.equal(testMessageArray[0].from);
-                expect(res.body[3].subject).to.be.a('string');
-                expect(res.body[3].to).to.be.a('undefined');
-                expect(res.body[3].message).to.be.a('undefined');
-                return;
+            .then(({ body: { messages } }) => {
+                expect(messages).to.be.an('array');
+                expect(messages[3].from).to.equal(testMessageArray[0].from);
+                expect(messages[3].subject).to.be.a('string');
+                expect(messages[3].to).to.be.a('undefined');
+                expect(messages[3].message).to.be.a('undefined');
             })
         );
     });
