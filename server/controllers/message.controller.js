@@ -193,8 +193,10 @@ function list(req, res) {
 
     Message
         .scope({ method: ['forUser', req.user] })
-        .findAll(queryObject)
-        .then(results => res.send(results));
+        .findAndCountAll(queryObject)
+        .then(response =>
+            res.send({ messages: response.rows, count: response.count })
+        );
 }
 
 function count() {}
