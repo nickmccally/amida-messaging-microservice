@@ -20,6 +20,7 @@ function create(req, res, next) {
     const participants = req.body.participants;
     let users = [];
     let userPromises = [];
+    let date = new Date();
     participants.forEach((participant) => {
       let userPromise = User.findOrCreate({where: {username: participant}})
       .spread((user, created) => {
@@ -29,7 +30,10 @@ function create(req, res, next) {
     });
 
     Promise.all(userPromises).then(() => {
-      Thread.create({topic: req.body.topic}).then((thread) => {
+      Thread.create({
+        topic: req.body.topic,
+        lastMessageSent: date
+      }).then((thread) => {
         thread.setUsers(users);
         const sender = users.find(sender => {
           return sender.username === username;
@@ -69,6 +73,7 @@ function create(req, res, next) {
  * @returns {Message}
  */
 function reply(req, res, next) {
+  let date = new Date();
   Thread.findById(req.params.threadId)
     .then((thread) => {
       if (!thread) {
@@ -87,6 +92,9 @@ function reply(req, res, next) {
         }).then((message) => {
           thread.addMessage(message);
           thread.setLastMessage(message);
+          thread.update({
+            lastMessageSent: date
+          }).then(() => {})
           thread.getUsers().then((users) => {
             const addUserMessagePromises = [];
             users.forEach((user) => {
@@ -135,24 +143,26 @@ function show(req, res, next) {
 function index(req, res, next) {
   const { username } = req.user;
   User.findOne({
-    where: {username},
-    include: [{
-      model: Thread,
-      include:[{
-        model: Message,
-        as: 'LastMessage',
-        include: [{
-          association: 'Sender'
-        }]
-      }]
-    }]
+    where: {username}
     })
     .then((user) => {
       if (!user) {
           const err = new APIError('Thread does not exist', httpStatus.NOT_FOUND, true);
           return next(err);
       }
-      res.send(user.Threads)
+      user.getThreads({
+        include:[{
+          model: Message,
+          as: 'LastMessage',
+          include: [{
+            association: 'Sender'
+          }]
+        }],
+        order: [
+        ['lastMessageSent', 'DESC']]
+      }).then(threads => {
+        res.send(threads)
+      })
     })
     .catch(e => next(e));
 }

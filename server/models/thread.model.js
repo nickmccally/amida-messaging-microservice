@@ -11,9 +11,11 @@ module.exports = (sequelize, DataTypes) => {
         topic: {
             type: DataTypes.STRING,
             allowNull: false,
+        },
+        lastMessageSent: {
+            type: DataTypes.DATE,
+            allowNull: true,
         }
     });
-    // Class methods
-
     return Thread;
 };
