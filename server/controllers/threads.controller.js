@@ -147,7 +147,7 @@ function index(req, res, next) {
     })
     .then((user) => {
       if (!user) {
-          const err = new APIError('Thread does not exist', httpStatus.NOT_FOUND, true);
+          const err = new APIError('There are no threads for the current user', httpStatus.NOT_FOUND, true);
           return next(err);
       }
       user.getThreads({
