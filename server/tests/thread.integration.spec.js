@@ -206,6 +206,19 @@ describe('Thread API:', () => {
             })
         );
 
+        it('should produce a reference to the oldest unread message or newest otherwise',
+            () => request(app)
+            .get(`${baseURL}/thread`)
+            .set('Authorization', `Bearer ${auth}`)
+            .expect(httpStatus.OK)
+            .then(({ body: { threads } }) => {
+                expect(threads).to.be.an('array');
+                const referenceMessageIds = [9, 6, 4, 2, 1];
+                expect(threads.map(thread => thread.refMessageId))
+                .to.deep.equal(referenceMessageIds);
+            })
+        );
+
         it('should support limit parameter', () => request(app)
             .get(`${baseURL}/thread?limit=1`)
             .set('Authorization', `Bearer ${auth}`)
