@@ -52,12 +52,13 @@ function findLastReadMessageId(thread, allMessages) {
             continue; // eslint-disable-line no-continue
         }
         if (maxCreatedMessageId) {
-            if (maxCreatedDate < allMessages[j].readAt) {
-                maxCreatedDate = allMessages[j].readAt;
+            if (maxCreatedDate < allMessages[j].createdAt) {
+                maxCreatedDate = allMessages[j].createdAt;
                 maxCreatedMessageId = allMessages[j].id;
             }
         } else {
             maxCreatedMessageId = allMessages[j].id;
+            maxCreatedDate = allMessages[j].createdAt;
         }
     }
     return maxCreatedMessageId;
