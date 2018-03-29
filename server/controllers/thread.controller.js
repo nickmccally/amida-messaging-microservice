@@ -43,7 +43,7 @@ function findFirstUnreadMessageId(thread, allMessages) {
     return minUnreadMessageId;
 }
 
-function findLastReadMessageId(thread, allMessages) {
+function findLastMessageId(thread, allMessages) {
     return allMessages
     .filter(message => message.originalMessageId === thread.originalMessageId)
     .reduce((accumulatorMessage, currentMessage) => (
@@ -117,7 +117,7 @@ function list(req, res, next) {
                           = findFirstUnreadMessageId(threads[i], allMessages);
                     } else {
                         threads[i].refMessageId
-                          = findLastReadMessageId(threads[i], allMessages);
+                          = findLastMessageId(threads[i], allMessages);
                     }
                     threads[i].subject
                       = findFirstSubjectText(threads[i], allMessages);
