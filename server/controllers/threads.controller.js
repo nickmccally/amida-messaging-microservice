@@ -128,9 +128,13 @@ function show(req, res, next) {
       thread.getMessages({
         include: [{
           association: 'Sender'
-        }]
+        }],
+        //Order messages here by ascending. Table assigns id in chronological order as messages are created
+        order: [
+          ['id', 'ASC']
+        ]
         }).then(messages => {
-        res.send(messages)
+          res.send(messages)
       })
     })
     .catch(e => next(e));
