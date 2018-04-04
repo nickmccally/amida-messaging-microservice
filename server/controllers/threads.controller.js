@@ -2,10 +2,13 @@ import httpStatus from 'http-status';
 import Promise from 'bluebird';
 import db from '../../config/sequelize';
 import APIError from '../helpers/APIError';
+import Sequelize from 'sequelize';
 
 const Message = db.Message;
 const Thread = db.Thread;
 const User = db.User;
+const UserThread = db.UserThread;
+const Op = Sequelize.Op;
 
 /**
  * Start a new thread
@@ -94,7 +97,17 @@ function reply(req, res, next) {
           thread.setLastMessage(message);
           thread.update({
             lastMessageSent: date
-          }).then(() => {})
+          }).then(() => {});
+          UserThread.update({
+            lastMessageRead: false,
+          }, {
+            where: {
+              ThreadId: thread.id,
+              UserId: {
+                [Op.ne]: currentUser.id
+              }
+            }
+          });
           thread.getUsers().then((users) => {
             const addUserMessagePromises = [];
             users.forEach((user) => {
@@ -125,6 +138,14 @@ function show(req, res, next) {
           const err = new APIError('Thread does not exist', httpStatus.NOT_FOUND, true);
           return next(err);
       }
+      UserThread.update({
+        lastMessageRead: true,
+      }, {
+        where: {
+          ThreadId: thread.id,
+          UserId: req.user.id
+        }
+      });
       thread.getMessages({
         include: [{
           association: 'Sender'
