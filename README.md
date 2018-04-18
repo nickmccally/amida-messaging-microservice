@@ -3,6 +3,15 @@
 
 ## Design
 
+### Signing algorithm
+By default, the service expects JWTs to be signed with HMAC. This relies on a shared secret between the messaging service and the auth service.
+Whenever possible, you should use the RSA implementation. This can be activated by setting JWT_MODE='rsa' and setting the JWT_PUBLIC_KEY_PATH to the location of the public key
+published by the auth service. The public key should be available for the consuming service in order to verify the JWTs.
+
+To generate a keypair (for the auth service):
+ssh-keygen -t rsa -b 4096 -f private.key
+openssl rsa -in private.key -pubout -outform PEM -out private.key.pub
+
 ### API Spec
 The spec can be viewed at https://amida-tech.github.io/amida-messaging-microservice/.
 

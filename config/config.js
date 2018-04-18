@@ -11,6 +11,10 @@ const envVarsSchema = Joi.object({
         .default(4001),
     JWT_SECRET: Joi.string().required()
         .description('JWT Secret required to sign'),
+    JWT_MODE: Joi.string().allow(['rsa', 'hmac']).default('hmac')
+        .description('Signing algorithm for JWT'),
+    JWT_PUBLIC_KEY_PATH: Joi.string()
+        .description('Absolute or relative path to RSA public key'),
     PG_DB: Joi.string().required()
         .description('Postgres database name'),
     PG_PORT: Joi.number()
@@ -23,6 +27,8 @@ const envVarsSchema = Joi.object({
         .description('Postgres password'),
     TEST_TOKEN: Joi.string().allow('')
         .description('Test auth token'),
+    TEST_TOKEN_RSA: Joi.string().allow('')
+        .description('Test auth token generated with RSA'),
 }).unknown()
     .required();
 
@@ -35,7 +41,10 @@ const config = {
     env: envVars.NODE_ENV,
     port: envVars.PORT,
     jwtSecret: envVars.JWT_SECRET,
+    jwtMode: envVars.JWT_MODE,
+    jwtPublicKeyPath: envVars.JWT_PUBLIC_KEY_PATH,
     testToken: envVars.TEST_TOKEN,
+    testTokenRSA: envVars.TEST_TOKEN_RSA,
     postgres: {
         db: envVars.PG_DB,
         port: envVars.PG_PORT,

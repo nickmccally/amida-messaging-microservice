@@ -3,12 +3,19 @@ import {
     Strategy as JwtStrategy,
     ExtractJwt,
 } from 'passport-jwt';
+import fs from 'fs';
 import config from './config';
+
+let key;
+if (config.jwtMode === 'rsa') {
+    key = fs.readFileSync(config.jwtPublicKeyPath);
+} else {
+    key = config.jwtSecret;
+}
 
 const opts = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: config.jwtSecret,
-    // passReqToCallback: true,
+    secretOrKey: key,
 };
 
 module.exports = (passport) => {
