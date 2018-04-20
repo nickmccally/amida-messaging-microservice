@@ -138,14 +138,17 @@ function show(req, res, next) {
           const err = new APIError('Thread does not exist', httpStatus.NOT_FOUND, true);
           return next(err);
       }
-      UserThread.update({
-        lastMessageRead: true,
-      }, {
-        where: {
-          ThreadId: thread.id,
-          UserId: req.user.id
-        }
-      });
+      const { username } = req.user;
+      User.findOne({where: {username}}).then(currentUser => {
+        UserThread.update({
+          lastMessageRead: true,
+        }, {
+          where: {
+            ThreadId: thread.id,
+            UserId: currentUser.id
+          }
+        });
+      })
       thread.getMessages({
         include: [{
           association: 'Sender'
