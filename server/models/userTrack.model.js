@@ -1,20 +1,23 @@
 /**
- * UserThread Schema
+ * User Schema
  */
 module.exports = (sequelize, DataTypes) => {
-    const UserThread = sequelize.define('UserThread', {
+    const UserTrack = sequelize.define('UserTrack', {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true,
         },
-        lastMessageRead: {
-            type: DataTypes.BOOLEAN,
+        userId: {
+            type: DataTypes.INTEGER,
             allowNull: false,
-            defaultValue: false,
+        },
+        track: {
+          type: DataTypes.STRING,
+          allowNull: false
         }
     });
     // Class methods
 
-    return UserThread;
+    return UserTrack;
 };

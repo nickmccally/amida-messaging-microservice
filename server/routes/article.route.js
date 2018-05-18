@@ -1,16 +1,13 @@
 import express from 'express';
 import passport from 'passport';
 
-import threadCtrl from '../controllers/thread.controller';
+import articleCtrl from '../controllers/article.controller';
 
 const router = express.Router(); // eslint-disable-line new-cap
 
 router.use(passport.authenticate('jwt', { session: false }));
 
-router.route('/:originalMessageId')
-    .get(threadCtrl.get);
-
 router.route('/')
-    .get(threadCtrl.list);
+    .get(articleCtrl.index);
 
 export default router;

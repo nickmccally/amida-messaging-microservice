@@ -22,34 +22,36 @@ const sequelize = new Sequelize(config.postgres.db,
         logging: dbLogging,
     });
 
-const Message = sequelize.import('../server/models/message.model');
+const Article = sequelize.import('../server/models/article.model');
 const User = sequelize.import('../server/models/user.model');
-const Thread = sequelize.import('../server/models/thread.model');
-const UserMessage = sequelize.import('../server/models/userMessage.model');
-const UserThread = sequelize.import('../server/models/userThread.model');
+const UserTrack = sequelize.import('../server/models/userTrack.model');
+// const Thread = sequelize.import('../server/models/thread.model');
+// const UserMessage = sequelize.import('../server/models/userMessage.model');
+// const UserThread = sequelize.import('../server/models/userThread.model');
 
+// Article.belongsToMany(User);
+// Article.hasOne(User, {as: 'u'});
 // Threads
-Thread.hasMany(Message);
-Thread.hasOne(Message, {as: 'LastMessage'});
-Thread.belongsToMany(User, {through: 'UserThread'});
-
-// Messages
-Message.belongsTo(Thread)
-Message.belongsTo(User, {as: 'Sender'})
-Message.belongsToMany(User, {through: 'UserMessage'});
+// Thread.hasMany(Message);
+// Thread.hasOne(Message, {as: 'LastMessage'});
+// Thread.belongsToMany(User, {through: 'UserThread'});
+//
+// // Messages
+// Message.belongsTo(Thread)
+// Message.belongsTo(User, {as: 'Sender'})
+// Message.belongsToMany(User, {through: 'UserMessage'});
 
 // Users
-User.belongsToMany(Thread, {through: 'UserThread'});
-User.belongsToMany(Message, {through: 'UserMessage'})
+// User.belongsToMany(Thread, {through: 'UserThread'});
+// User.belongsToMany(Message, {through: 'UserMessage'})
 
 
 
-
-db.Message = Message;
-db.Thread = Thread;
+db.Article = Article;
 db.User = User;
-db.UserMessage = UserMessage;
-db.UserThread = UserThread;
+db.UserTrack = UserTrack;
+// db.UserMessage = UserMessage;
+// db.UserThread = UserThread;
 
 // assign the sequelize variables to the db object and returning the db.
 module.exports = _.extend({
